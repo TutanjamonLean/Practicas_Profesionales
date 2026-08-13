@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTech - Iniciar sesion</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <header class="header-principal">
+        <img src="../img/logo-bibliotech.svg" alt="Logo BiblioTech" class="logo">
+        <div>
+            <h1 class="titulo-sitio">BiblioTech</h1>
+            <p class="subtitulo-sitio">Biblioteca Provincial "Manuel Belgrano"</p>
+        </div>
+    </header>
+
+    <nav class="nav-principal" aria-label="Navegacion principal">
+        <a href="../index.html">Inicio</a>
+        <a href="login.html">Iniciar sesion</a>
+        <a href="catalogo.html">Catalogo</a>
+        <a href="historial.html">Mi historial</a>
+        <a href="panel-bibliotecario.html">Panel bibliotecario</a>
+        <a href="tablero-director.html">Tablero del director</a>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Iniciar sesion</h2>
+            <p>
+                Ingresa tus credenciales para acceder a las funcionalidades
+                del sistema. Los socios pueden consultar el catalogo y su
+                historial; el personal de biblioteca accede a su panel
+                correspondiente.
+            </p>
+        </section>
+
+        <form action="../index.html" method="get">
+            <fieldset>
+                <legend>Datos de acceso</legend>
+
+                <label for="usuario">Usuario</label>
+                <input type="text" id="usuario" name="usuario" required
+                       placeholder="Ej: mgarcia">
+
+                <label for="clave">Contrasena</label>
+                <input type="password" id="clave" name="clave" required>
+
+                <label for="rol">Tipo de usuario</label>
+                <select id="rol" name="rol">
+                    <option value="socio">Socio</option>
+                    <option value="bibliotecario">Bibliotecario</option>
+                    <option value="director">Director</option>
+                </select>
+            </fieldset>
+
+            <p>
+                <button type="submit" class="boton">Ingresar</button>
+                <a class="boton boton-secundario" href="../index.html">Cancelar</a>
+            </p>
+        </form>
+
+    </main>
+
+    <footer class="footer-principal">
+        <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;
+           Prototipo Hito 02 &middot; Grupo 7</p>
+    </footer>
+</body>
+</html>

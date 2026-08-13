@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTech - Mi historial</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <header class="header-principal">
+        <img src="../img/logo-bibliotech.svg" alt="Logo BiblioTech" class="logo">
+        <div>
+            <h1 class="titulo-sitio">BiblioTech</h1>
+            <p class="subtitulo-sitio">Biblioteca Provincial "Manuel Belgrano"</p>
+        </div>
+    </header>
+
+    <nav class="nav-principal" aria-label="Navegacion principal">
+        <a href="../index.html">Inicio</a>
+        <a href="login.html">Iniciar sesion</a>
+        <a href="catalogo.html">Catalogo</a>
+        <a href="historial.html">Mi historial</a>
+        <a href="panel-bibliotecario.html">Panel bibliotecario</a>
+        <a href="tablero-director.html">Tablero del director</a>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Mi historial de lecturas</h2>
+            <p>
+                Vista consolidada de tus prestamos: libros devueltos,
+                prestamos activos y sanciones vigentes. Si tenes un
+                prestamo proximo a vencer, el sistema lo marcara
+                automaticamente.
+            </p>
+        </section>
+
+        <section>
+            <h3>Prestamos activos</h3>
+            <table>
+                <caption>Listado de prestamos vigentes</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Titulo</th>
+                        <th scope="col">Autor</th>
+                        <th scope="col">Retirado</th>
+                        <th scope="col">Devolucion</th>
+                        <th scope="col">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Rayuela</td>
+                        <td>Julio Cortazar</td>
+                        <td>01/08/2026</td>
+                        <td>15/08/2026</td>
+                        <td><span class="etiqueta etiqueta-activo">Activo</span></td>
+                    </tr>
+                    <tr>
+                        <td>Cien anos de soledad</td>
+                        <td>Gabriel Garcia Marquez</td>
+                        <td>05/08/2026</td>
+                        <td>19/08/2026</td>
+                        <td><span class="etiqueta etiqueta-activo">Activo</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h3>Libros devueltos</h3>
+            <table>
+                <caption>Historial de devoluciones</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Titulo</th>
+                        <th scope="col">Autor</th>
+                        <th scope="col">Devuelto el</th>
+                        <th scope="col">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>El aleph</td>
+                        <td>Jorge Luis Borges</td>
+                        <td>20/07/2026</td>
+                        <td><span class="etiqueta etiqueta-devuelto">Devuelto</span></td>
+                    </tr>
+                    <tr>
+                        <td>Pedro Paramo</td>
+                        <td>Juan Rulfo</td>
+                        <td>10/07/2026</td>
+                        <td><span class="etiqueta etiqueta-devuelto">Devuelto</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h3>Sanciones vigentes</h3>
+            <p>No tenes sanciones activas en este momento.</p>
+        </section>
+
+        <aside>
+            <strong>Privacidad:</strong> Por normativa de proteccion al
+            menor, los socios menores de edad aparecen en esta pantalla
+            solo por su nombre de pila; el apellido y la direccion no se
+            muestran a terceros.
+        </aside>
+    </main>
+
+    <footer class="footer-principal">
+        <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;
+           Prototipo Hito 02 &middot; Grupo 7</p>
+    </footer>
+</body>
+</html>

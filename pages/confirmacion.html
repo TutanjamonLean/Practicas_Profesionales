@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTech - Reserva confirmada</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <header class="header-principal">
+        <img src="../img/logo-bibliotech.svg" alt="Logo BiblioTech" class="logo">
+        <div>
+            <h1 class="titulo-sitio">BiblioTech</h1>
+            <p class="subtitulo-sitio">Biblioteca Provincial "Manuel Belgrano"</p>
+        </div>
+    </header>
+
+    <nav class="nav-principal" aria-label="Navegacion principal">
+        <a href="../index.html">Inicio</a>
+        <a href="login.html">Iniciar sesion</a>
+        <a href="catalogo.html">Catalogo</a>
+        <a href="historial.html">Mi historial</a>
+        <a href="panel-bibliotecario.html">Panel bibliotecario</a>
+        <a href="tablero-director.html">Tablero del director</a>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Reserva confirmada</h2>
+            <div class="aviso aviso-exito" role="status">
+                <strong>Tu solicitud de prestamo fue registrada correctamente.</strong>
+            </div>
+        </section>
+
+        <article>
+            <h3>Comprobante digital</h3>
+
+            <table>
+                <caption>Detalle de la reserva</caption>
+                <tbody>
+                    <tr>
+                        <th scope="row">Titulo</th>
+                        <td>Ficciones</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Autor</th>
+                        <td>Jorge Luis Borges</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Socio</th>
+                        <td>Nro. 12345</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Fecha de la solicitud</th>
+                        <td>10/08/2026</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Fecha limite de devolucion</th>
+                        <td>24/08/2026</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Estado</th>
+                        <td><span class="etiqueta etiqueta-activo">Reservado</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p>
+                Acerca este comprobante al mostrador de la biblioteca para
+                retirar el ejemplar. La entrega fisica sera aprobada por
+                el bibliotecario encargado.
+            </p>
+        </article>
+
+        <aside>
+            <strong>Proximo paso:</strong> Podes consultar esta reserva y
+            tus prestamos activos desde
+            <a href="historial.html">Mi historial</a>.
+        </aside>
+
+        <p>
+            <a class="boton" href="catalogo.html">Volver al catalogo</a>
+            <a class="boton boton-secundario" href="../index.html">Ir al inicio</a>
+        </p>
+    </main>
+
+    <footer class="footer-principal">
+        <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;
+           Prototipo Hito 02 &middot; Grupo 7</p>
+    </footer>
+</body>
+</html>

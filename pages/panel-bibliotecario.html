@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTech - Panel del bibliotecario</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <header class="header-principal">
+        <img src="../img/logo-bibliotech.svg" alt="Logo BiblioTech" class="logo">
+        <div>
+            <h1 class="titulo-sitio">BiblioTech - Administracion</h1>
+            <p class="subtitulo-sitio">Biblioteca Provincial "Manuel Belgrano"</p>
+        </div>
+    </header>
+
+    <nav class="nav-principal" aria-label="Navegacion principal">
+        <a href="../index.html">Inicio</a>
+        <a href="login.html">Iniciar sesion</a>
+        <a href="catalogo.html">Catalogo</a>
+        <a href="historial.html">Mi historial</a>
+        <a href="panel-bibliotecario.html">Panel bibliotecario</a>
+        <a href="tablero-director.html">Tablero del director</a>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Panel del bibliotecario</h2>
+            <p>
+                Vista de atencion al mostrador. Esta interfaz fue
+                diseñada con botones de gran tamaño y un esquema de
+                alto contraste para ser usada por los voluntarios
+                mayores con vision reducida.
+            </p>
+        </section>
+
+        <section>
+            <h3>Solicitudes de prestamo pendientes</h3>
+            <table>
+                <caption>Reservas que esperan aprobacion de entrega</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Socio</th>
+                        <th scope="col">Titulo</th>
+                        <th scope="col">Fecha</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>L. (menor)</td>
+                        <td>Ficciones</td>
+                        <td>10/08/2026</td>
+                        <td>
+                            <a class="boton" href="#aprobar">Aprobar entrega</a>
+                            <a class="boton boton-secundario" href="#rechazar">Rechazar</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Mariana Garcia</td>
+                        <td>Rayuela</td>
+                        <td>10/08/2026</td>
+                        <td>
+                            <a class="boton" href="#aprobar">Aprobar entrega</a>
+                            <a class="boton boton-secundario" href="#rechazar">Rechazar</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Pablo Suarez</td>
+                        <td>Cosmos</td>
+                        <td>10/08/2026</td>
+                        <td>
+                            <a class="boton" href="#aprobar">Aprobar entrega</a>
+                            <a class="boton boton-secundario" href="#rechazar">Rechazar</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h3>Devoluciones del dia</h3>
+            <table>
+                <caption>Libros a recibir en el mostrador hoy</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Socio</th>
+                        <th scope="col">Titulo</th>
+                        <th scope="col">Vencimiento</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Mariana Garcia</td>
+                        <td>Cien anos de soledad</td>
+                        <td>10/08/2026</td>
+                        <td>
+                            <a class="boton" href="#registrar">Registrar devolucion</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Pablo Suarez</td>
+                        <td>Pedro Paramo</td>
+                        <td>10/08/2026</td>
+                        <td>
+                            <a class="boton" href="#registrar">Registrar devolucion</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h3>Socios morosos</h3>
+            <table>
+                <caption>Socios con prestamos vencidos a la fecha</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Socio</th>
+                        <th scope="col">Titulo</th>
+                        <th scope="col">Dias de atraso</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Carla Mendez</td>
+                        <td>El aleph</td>
+                        <td>5</td>
+                        <td>
+                            <a class="boton" href="#notificar">Enviar notificacion</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h3>Reportes y acciones de inventario</h3>
+            <p>
+                <a class="boton" href="#reporte-vencidos">Generar reporte de prestamos vencidos</a>
+                <a class="boton" href="#baja">Dar de baja ejemplar deteriorado</a>
+                <a class="boton boton-secundario" href="#alta">Registrar nuevo ejemplar</a>
+            </p>
+        </section>
+
+        <aside>
+            <strong>Recordatorio:</strong> Los prestamos a socios
+            menores de edad no muestran apellido ni direccion. Esta
+            medida cumple la normativa de proteccion al menor.
+        </aside>
+    </main>
+
+    <footer class="footer-principal">
+        <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;
+           Prototipo Hito 02 &middot; Grupo 7</p>
+    </footer>
+</body>
+</html>

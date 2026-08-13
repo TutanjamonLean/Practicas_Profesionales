@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTech - Tablero del director</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <header class="header-principal">
+        <img src="../img/logo-bibliotech.svg" alt="Logo BiblioTech" class="logo">
+        <div>
+            <h1 class="titulo-sitio">BiblioTech</h1>
+            <p class="subtitulo-sitio">Biblioteca Provincial "Manuel Belgrano"</p>
+        </div>
+    </header>
+
+    <nav class="nav-principal" aria-label="Navegacion principal">
+        <a href="../index.html">Inicio</a>
+        <a href="login.html">Iniciar sesion</a>
+        <a href="catalogo.html">Catalogo</a>
+        <a href="historial.html">Mi historial</a>
+        <a href="panel-bibliotecario.html">Panel bibliotecario</a>
+        <a href="tablero-director.html">Tablero del director</a>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Tablero de control unificado</h2>
+            <p>
+                Vista consolidada del estado del catalogo y la
+                actividad de los socios. Permite detectar de un vistazo
+                las categorias mas leidas, los prestamos activos y los
+                titulos faltantes en el inventario.
+            </p>
+        </section>
+
+        <section>
+            <h3>Indicadores generales</h3>
+            <table>
+                <caption>Resumen del dia</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Indicador</th>
+                        <th scope="col">Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Socios activos</td>
+                        <td>1.284</td>
+                    </tr>
+                    <tr>
+                        <td>Prestamos vigentes</td>
+                        <td>312</td>
+                    </tr>
+                    <tr>
+                        <td>Prestamos vencidos</td>
+                        <td>27</td>
+                    </tr>
+                    <tr>
+                        <td>Ejemplares en sala (uso interno)</td>
+                        <td>48</td>
+                    </tr>
+                    <tr>
+                        <td>Ejemplares disponibles para prestamo</td>
+                        <td>5.430</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h3>Categorias mas leidas</h3>
+            <table>
+                <caption>Ranking de prestamos por categoria (ultimo mes)</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Categoria</th>
+                        <th scope="col">Prestamos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Novela</td>
+                        <td>412</td>
+                    </tr>
+                    <tr>
+                        <td>Infantil</td>
+                        <td>298</td>
+                    </tr>
+                    <tr>
+                        <td>Ensayo</td>
+                        <td>187</td>
+                    </tr>
+                    <tr>
+                        <td>Ciencia</td>
+                        <td>154</td>
+                    </tr>
+                    <tr>
+                        <td>Poesia</td>
+                        <td>96</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h3>Titulos faltantes en el inventario</h3>
+            <table>
+                <caption>Libros agotados o con un solo ejemplar disponible</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Titulo</th>
+                        <th scope="col">Autor</th>
+                        <th scope="col">Stock actual</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>La metamorfosis</td>
+                        <td>Franz Kafka</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>Cosmos</td>
+                        <td>Carl Sagan</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <td>El tunel</td>
+                        <td>Ernesto Sabato</td>
+                        <td>0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <aside>
+            <strong>Sugerencia:</strong> Los datos mostrados aqui
+            provienen del modulo de reportes del sistema. En el
+            Hito 03 se conectaran al servidor Node.js para
+            actualizarse automaticamente.
+        </aside>
+    </main>
+
+    <footer class="footer-principal">
+        <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;
+           Prototipo Hito 02 &middot; Grupo 7</p>
+    </footer>
+</body>
+</html>

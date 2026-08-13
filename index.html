@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTech - Inicio</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header-principal">
+        <img src="img/logo-bibliotech.svg" alt="Logo BiblioTech" class="logo">
+        <div>
+            <h1 class="titulo-sitio">BiblioTech Papulince</h1>
+            <p class="subtitulo-sitio">Biblioteca Provincial "Manuel Belgrano"</p>
+        </div>
+    </header>
+
+    <nav class="nav-principal" aria-label="Navegacion principal">
+        <a href="index.html">Inicio</a>
+        <a href="pages/login.html">Iniciar sesion</a>
+        <a href="pages/catalogo.html">Catalogo</a>
+        <a href="pages/historial.html">Mi historial</a>
+        <a href="pages/panel-bibliotecario.html">Panel bibliotecario</a>
+        <a href="pages/tablero-director.html">Tablero del director</a>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Sistema de gestion de biblioteca</h2>
+            <p>
+                BiblioTech es la plataforma web de la Biblioteca Provincial
+                "Manuel Belgrano" para la gestion de prestamos de libros,
+                el control de inventario y la administracion de socios.
+                Su objetivo es optimizar el acceso a la cultura por parte
+                de los vecinos, permitiendo consultar la disponibilidad
+                del material bibliografico y reservar ejemplares de manera
+                rapida y segura.
+            </p>
+        </section>
+
+        <section>
+            <h2>Acceso segun tu rol</h2>
+            <div class="tarjetas-roles">
+                <article class="tarjeta-rol">
+                    <h3>Socio</h3>
+                    <p>
+                        Busca libros en el catalogo, solicita prestamos,
+                        consulta tu historial de lecturas y revisa si tenes
+                        sanciones vigentes.
+                    </p>
+                    <p><a class="boton" href="pages/catalogo.html">Entrar al catalogo</a></p>
+                </article>
+
+                <article class="tarjeta-rol">
+                    <h3>Bibliotecario</h3>
+                    <p>
+                        Atiende el mostrador: aprueba entregas, registra
+                        devoluciones, da de baja ejemplares y notifica a
+                        socios morosos. Interfaz con botones grandes y
+                        alto contraste.
+                    </p>
+                    <p><a class="boton" href="pages/panel-bibliotecario.html">Ir al panel</a></p>
+                </article>
+
+                <article class="tarjeta-rol">
+                    <h3>Director</h3>
+                    <p>
+                        Consulta el tablero de control unificado con el
+                        estado del catalogo, la actividad de los socios y
+                        los titulos faltantes de inventario.
+                    </p>
+                    <p><a class="boton" href="pages/tablero-director.html">Ver tablero</a></p>
+                </article>
+            </div>
+        </section>
+
+        <aside>
+            <strong>Aviso:</strong> Para acceder a las funcionalidades
+            protegidas (prestamo, historial, panel de administracion) es
+            necesario iniciar sesion con credenciales de socio o personal
+            de la biblioteca.
+            <p><a class="boton boton-secundario" href="pages/login.html">Iniciar sesion</a></p>
+        </aside>
+    </main>
+
+    <footer class="footer-principal">
+        <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;
+           Prototipo Hito 02 &middot; Grupo 7</p>
+    </footer>
+</body>
+</html>

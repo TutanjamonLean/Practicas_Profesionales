@@ -1,0 +1,224 @@
+/* ===========================================================
+   BiblioTech - Estilos para panel de administracion
+   (Hito 02)
+
+   Pensado para los voluntarios mayores con vision reducida
+   que atienden el mostrador:
+   - alto contraste (negro/amarillo)
+   - tipografia mas grande
+   - botones grandes con bordes marcados
+   - elementos de accion bien separados
+
+   Esta hoja se ENCADENA a styles.css (no la reemplaza).
+   Las paginas de administracion la cargan en segundo lugar.
+   =========================================================== */
+
+body {
+    background-color: #000000;
+    color: #ffeb3b;
+    font-size: 1.15rem;
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4 {
+    color: #ffeb3b;
+    font-size: 1.4em;
+}
+
+h1 { font-size: 2rem; }
+h2 { font-size: 1.6rem; }
+h3 { font-size: 1.3rem; }
+
+a {
+    color: #ffeb3b;
+    text-decoration: underline;
+}
+
+/* --- Header y navegacion --- */
+.header-principal {
+    background-color: #ffeb3b;
+    color: #000000;
+    border-bottom: 4px solid #ffffff;
+}
+
+.header-principal .titulo-sitio {
+    color: #000000;
+}
+
+.header-principal .subtitulo-sitio {
+    color: #000000;
+    font-weight: bold;
+}
+
+.nav-principal {
+    background-color: #000000;
+    border-top: 3px solid #ffeb3b;
+    border-bottom: 3px solid #ffeb3b;
+}
+
+.nav-principal a {
+    color: #ffeb3b;
+    font-size: 1.1rem;
+    padding: 0.6rem 1rem;
+    border: 2px solid transparent;
+}
+
+.nav-principal a:hover,
+.nav-principal a:focus {
+    background-color: #ffeb3b;
+    color: #000000;
+    border: 2px solid #ffffff;
+    text-decoration: none;
+}
+
+/* --- Main, secciones, articulos --- */
+main {
+    background-color: #000000;
+    color: #ffeb3b;
+}
+
+article,
+aside {
+    background-color: #1a1a1a;
+    border: 3px solid #ffeb3b;
+    color: #ffeb3b;
+    padding: 1.2rem;
+    margin-bottom: 1.2rem;
+}
+
+aside {
+    border-left: 8px solid #ffeb3b;
+}
+
+/* --- Avisos --- */
+.aviso {
+    background-color: #1a1a1a;
+    border: 3px solid #ffeb3b;
+    color: #ffeb3b;
+}
+
+.aviso-error {
+    background-color: #b71c1c;
+    border-color: #ffffff;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.aviso-exito {
+    background-color: #1b5e20;
+    border-color: #ffffff;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+/* --- Botones grandes (voluntarios mayores) --- */
+.boton,
+.boton-secundario {
+    background-color: #ffeb3b;
+    color: #000000;
+    border: 4px solid #ffffff;
+    font-size: 1.3rem;
+    font-weight: bold;
+    padding: 1rem 1.5rem;
+    margin: 0.4rem 0.4rem 0.4rem 0;
+    min-width: 180px;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+.boton:hover,
+.boton:focus {
+    background-color: #ffffff;
+    color: #000000;
+    border-color: #ffeb3b;
+    text-decoration: none;
+}
+
+.boton-secundario {
+    background-color: #000000;
+    color: #ffeb3b;
+    border-color: #ffeb3b;
+}
+
+.boton-secundario:hover,
+.boton-secundario:focus {
+    background-color: #ffeb3b;
+    color: #000000;
+    border-color: #ffffff;
+}
+
+/* --- Formularios --- */
+form {
+    background-color: #1a1a1a;
+    border: 3px solid #ffeb3b;
+    color: #ffeb3b;
+}
+
+form label {
+    color: #ffeb3b;
+    font-size: 1.1rem;
+}
+
+form input[type="text"],
+form input[type="number"],
+form input[type="search"],
+form input[type="date"],
+form input[type="password"],
+form select,
+form textarea {
+    background-color: #ffffff;
+    color: #000000;
+    border: 3px solid #ffeb3b;
+    font-size: 1.1rem;
+    padding: 0.7rem;
+}
+
+form fieldset {
+    border: 2px solid #ffeb3b;
+}
+
+form legend {
+    color: #ffeb3b;
+    font-size: 1.1rem;
+}
+
+/* --- Tablas --- */
+table {
+    background-color: #1a1a1a;
+    color: #ffeb3b;
+    border: 3px solid #ffeb3b;
+}
+
+th {
+    background-color: #ffeb3b;
+    color: #000000;
+    font-size: 1.1rem;
+    border: 2px solid #ffffff;
+}
+
+td {
+    border: 2px solid #ffeb3b;
+    color: #ffeb3b;
+}
+
+tr:nth-child(even) td {
+    background-color: #2a2a2a;
+}
+
+/* --- Etiquetas --- */
+.etiqueta-activo   { background-color: #1b5e20; color: #ffffff; border: 2px solid #ffffff; }
+.etiqueta-devuelto { background-color: #0d47a1; color: #ffffff; border: 2px solid #ffffff; }
+.etiqueta-moroso   { background-color: #b71c1c; color: #ffffff; border: 2px solid #ffffff; }
+.etiqueta-sala     { background-color: #ff6f00; color: #000000; border: 2px solid #ffffff; }
+
+/* --- Footer --- */
+.footer-principal {
+    background-color: #ffeb3b;
+    color: #000000;
+    border-top: 4px solid #ffffff;
+}
+
+.footer-principal a {
+    color: #000000;
+    font-weight: bold;
+}

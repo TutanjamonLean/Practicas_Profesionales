@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTech - Catalogo</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <header class="header-principal">
+        <img src="../img/logo-bibliotech.svg" alt="Logo BiblioTech" class="logo">
+        <div>
+            <h1 class="titulo-sitio">BiblioTech</h1>
+            <p class="subtitulo-sitio">Biblioteca Provincial "Manuel Belgrano"</p>
+        </div>
+    </header>
+
+    <nav class="nav-principal" aria-label="Navegacion principal">
+        <a href="../index.html">Inicio</a>
+        <a href="login.html">Iniciar sesion</a>
+        <a href="catalogo.html">Catalogo</a>
+        <a href="historial.html">Mi historial</a>
+        <a href="panel-bibliotecario.html">Panel bibliotecario</a>
+        <a href="tablero-director.html">Tablero del director</a>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Catalogo de libros</h2>
+            <p>
+                Busca por titulo, autor o genero para encontrar el
+                material disponible en la biblioteca. La disponibilidad
+                se muestra en tiempo real para cada ejemplar.
+            </p>
+        </section>
+
+        <form action="catalogo.html" method="get">
+            <fieldset>
+                <legend>Buscar libro</legend>
+                <label for="termino">Titulo, autor o genero</label>
+                <input type="search" id="termino" name="termino"
+                       placeholder="Ej: Borges, ciencia ficcion, ensayo...">
+
+                <label for="genero">Genero</label>
+                <select id="genero" name="genero">
+                    <option value="">Todos los generos</option>
+                    <option value="novela">Novela</option>
+                    <option value="ensayo">Ensayo</option>
+                    <option value="poesia">Poesia</option>
+                    <option value="ciencia">Ciencia</option>
+                    <option value="historia">Historia</option>
+                    <option value="infantil">Infantil</option>
+                </select>
+
+                <label for="disponible">Solo disponibles</label>
+                <input type="checkbox" id="disponible" name="disponible">
+            </fieldset>
+
+            <p>
+                <button type="submit" class="boton">Buscar</button>
+                <button type="reset" class="boton boton-secundario">Limpiar</button>
+            </p>
+        </form>
+
+        <section>
+            <h2>Resultados de la busqueda</h2>
+
+            <div class="catalogo">
+
+                <article class="libro">
+                    <h3>Ficciones</h3>
+                    <p class="meta">Jorge Luis Borges &middot; Cuento &middot; 1944</p>
+                    <p><span class="etiqueta etiqueta-activo">3 disponibles</span></p>
+                    <p><a class="boton" href="reserva.html">Reservar</a></p>
+                </article>
+
+                <article class="libro">
+                    <h3>Rayuela</h3>
+                    <p class="meta">Julio Cortazar &middot; Novela &middot; 1963</p>
+                    <p><span class="etiqueta etiqueta-activo">2 disponibles</span></p>
+                    <p><a class="boton" href="reserva.html">Reservar</a></p>
+                </article>
+
+                <article class="libro">
+                    <h3>Cien anos de soledad</h3>
+                    <p class="meta">Gabriel Garcia Marquez &middot; Novela &middot; 1967</p>
+                    <p><span class="etiqueta etiqueta-activo">5 disponibles</span></p>
+                    <p><a class="boton" href="reserva.html">Reservar</a></p>
+                </article>
+
+                <article class="libro">
+                    <h3>Cosmos</h3>
+                    <p class="meta">Carl Sagan &middot; Divulgacion cientifica &middot; 1980</p>
+                    <p><span class="etiqueta etiqueta-activo">1 disponible</span></p>
+                    <p><a class="boton" href="reserva.html">Reservar</a></p>
+                </article>
+
+                <article class="libro">
+                    <h3>La metamorfosis</h3>
+                    <p class="meta">Franz Kafka &middot; Novela corta &middot; 1915</p>
+                    <p class="aviso aviso-error"><strong>Sin stock disponible.</strong>
+                       Te avisaremos cuando se devuelva un ejemplar.</p>
+                </article>
+
+                <article class="libro">
+                    <h3>Edicion critica de manuscritos coloniales (siglo XVII)</h3>
+                    <p class="meta">Varios autores &middot; Coleccion unica</p>
+                    <p><span class="etiqueta etiqueta-sala">Solo consulta en sala</span></p>
+                    <p>Este ejemplar no se presta a domicilio por ser
+                       parte de la coleccion unica resguardada.</p>
+                </article>
+
+            </div>
+        </section>
+
+        <aside>
+            <strong>Recordatorio:</strong> Como socio podes tener hasta
+            3 prestamos simultaneos. Si intentas reservar un cuarto
+            libro, el sistema mostrara un aviso en pantalla y no
+            completara la operacion.
+        </aside>
+    </main>
+
+    <footer class="footer-principal">
+        <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;
+           Prototipo Hito 02 &middot; Grupo 7</p>
+    </footer>
+</body>
+</html>
