@@ -10,7 +10,7 @@ Grupo 7
 
 ## Integrantes
 - German Zanatta - Rol: Tablero del director 
-- Leandro Ferrante
+- Leandro Ferrante : Diseñador
 - Lola Torres - Rol: Inicio de sesion
 - Matias Donato - Rol: Catalogo  
 - Agustin Vasto - Rol: Mi historial
@@ -670,5 +670,3 @@ Practicas_Profesionales/
   - Accesibilidad: focus-visible, contraste AA, tamano fuente base 1rem, line-height 1.6
 - **Formularios HTML** con `action` + `method="get"` para simulacion de navegacion entre pantallas (sin backend)
 - **Navegacion consistente**: `nav-principal` replicado en todas las paginas
-h
-
