@@ -13,7 +13,7 @@ Grupo 7
 - Leandro Ferrante : Diseñador
 - Lola Torres - Rol: Inicio de sesion
 - Matias Donato - Rol: Catalogo  
-- Agustin Vasto - Rol: Mi historial
+- Agustin Vasto - Rol: Mi historial 
 - Thiago Gomez Rodriguez - Rol: Panel Bibliotecario
 
 ## Descripcion del sistema
