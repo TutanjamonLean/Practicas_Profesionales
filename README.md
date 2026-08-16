@@ -12,7 +12,7 @@ Grupo 7
 - German Zanatta - Rol: Tablero del director 
 - Leandro Ferrante : Diseñador
 - Lola Torres - Rol: Inicio de sesion
-- Matias Donato - Rol: Catalogo  
+- Matias Donato - Rol: Catalogo   
 - Agustin Vasto - Rol: Mi historial
 - Thiago Gomez Rodriguez - Rol: Panel Bibliotecario
 
