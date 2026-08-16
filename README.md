@@ -12,12 +12,12 @@ Grupo 7
 - German Zanatta - Rol: Tablero del director 
 - Leandro Ferrante : Diseñador
 - Lola Torres - Rol: Inicio de sesion
-- Matias Donato - Rol: Catalogo   
-- Agustin Vasto - Rol: Mi historial
+- Agustin Vasto - Rol: Mi historial 
+- Matias Donato - Rol: Catalogo  
 - Thiago Gomez Rodriguez - Rol: Panel Bibliotecario
 
 ## Descripcion del sistema
-BiblioTech es la aplicacion web que automatiza la gestion de prestamos de libros, el control de inventario y la administracion de socios de la Biblioteca Provincial "Manuel Belgrano". Su objetivo principal es optimizar el acceso a la cultura por parte de los vecinos, permitiendoles consultar la disponibilidad del material bibliografico y reservar ejemplares de manera rapida y segura. El sistema se centra en la autogestion del socio y opera en un entorno de red local dentro de la institucion para modernizar los procesos manuales actuales.
+BiblioTech es la aplicacion web que automatiza la gestion de prestamos de libros, el control de inventario y la administracion de socios de la Biblioteca Provincial "Manuel Belgrano". Su objetivo principal es optimizar el acceso a la cultura por parte de los vecinos, permitiendoles consultar la disponibilidad del material bibliografico y reservar ejemplares de manera rapida y segura. El sistema se centra en la autogestion del socio y opera en un entorno de red local dentro de la institucion para modernizar los procesos manuales actuales
 
 El sistema contempla tres roles:
 - **Socio**: busca libros en el catalogo, solicita prestamos, consulta su historial de lecturas y revisa si tiene sanciones vigentes. Maximo de 3 prestamos simultaneos. Los menores de edad aparecen solo por su nombre de pila para proteger su privacidad.
