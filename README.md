@@ -13,7 +13,7 @@ Grupo7
 ## Integrantes
 - German Zanatta
 - Leandro Ferrante
-- Lola Torres
+- Lola Torres - Rol: Inicio de sesion
 - Matias Donato
 - Agustin Vasto
 - Thiago Gomez Rodriguez
