@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BiblioTech - Panel del bibliotecario</title>
     <link rel="stylesheet" href="../styles.css">
+    <script src="../js/scripts.js"></script>
 </head>
 <body>
     <header class="header-principal">
@@ -47,34 +48,8 @@
                         <th scope="col">Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>L. (menor)</td>
-                        <td>Ficciones</td>
-                        <td>10/08/2026</td>
-                        <td>
-                            <a class="boton" href="#aprobar">Aprobar entrega</a>
-                            <a class="boton boton-secundario" href="#rechazar">Rechazar</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Mariana Garcia</td>
-                        <td>Rayuela</td>
-                        <td>10/08/2026</td>
-                        <td>
-                            <a class="boton" href="#aprobar">Aprobar entrega</a>
-                            <a class="boton boton-secundario" href="#rechazar">Rechazar</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Pablo Suarez</td>
-                        <td>Cosmos</td>
-                        <td>10/08/2026</td>
-                        <td>
-                            <a class="boton" href="#aprobar">Aprobar entrega</a>
-                            <a class="boton boton-secundario" href="#rechazar">Rechazar</a>
-                        </td>
-                    </tr>
+                <tbody id="tbody-solicitudes">
+                    <!-- Carga dinamica -->
                 </tbody>
             </table>
         </section>
@@ -91,23 +66,8 @@
                         <th scope="col">Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>Mariana Garcia</td>
-                        <td>Cien anos de soledad</td>
-                        <td>10/08/2026</td>
-                        <td>
-                            <a class="boton" href="#registrar">Registrar devolucion</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Pablo Suarez</td>
-                        <td>Pedro Paramo</td>
-                        <td>10/08/2026</td>
-                        <td>
-                            <a class="boton" href="#registrar">Registrar devolucion</a>
-                        </td>
-                    </tr>
+                <tbody id="tbody-devoluciones">
+                    <!-- Carga dinamica -->
                 </tbody>
             </table>
         </section>
@@ -124,15 +84,8 @@
                         <th scope="col">Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>Carla Mendez</td>
-                        <td>El aleph</td>
-                        <td>5</td>
-                        <td>
-                            <a class="boton" href="#notificar">Enviar notificacion</a>
-                        </td>
-                    </tr>
+                <tbody id="tbody-morosos">
+                    <!-- Carga dinamica -->
                 </tbody>
             </table>
         </section>
@@ -140,9 +93,9 @@
         <section>
             <h3>Reportes y acciones de inventario</h3>
             <p>
-                <a class="boton" href="#reporte-vencidos">Generar reporte de prestamos vencidos</a>
-                <a class="boton" href="#baja">Dar de baja ejemplar deteriorado</a>
-                <a class="boton boton-secundario" href="#alta">Registrar nuevo ejemplar</a>
+                <a class="boton" href="#reporte-vencidos" onclick="generarReporteVencidos()">Generar reporte de prestamos vencidos</a>
+                <a class="boton" href="#baja" onclick="darBajaEjemplar()">Dar de baja ejemplar deteriorado</a>
+                <a class="boton boton-secundario" href="#alta" onclick="registrarEjemplar()">Registrar nuevo ejemplar</a>
             </p>
         </section>
 
@@ -152,6 +105,273 @@
             medida cumple la normativa de proteccion al menor.
         </aside>
     </main>
+
+    <script>
+        async function cargarPanelBibliotecario() {
+            if (!BiblioTech.requerirAuth('bibliotecario')) return;
+
+            const datos = await BiblioTech.obtenerDatos();
+
+            // Cargar solicitudes pendientes (combinar datos.json + localStorage)
+            const solicitudesLS = JSON.parse(localStorage.getItem('biblio_solicitudes') || '[]');
+            const todasSolicitudes = [...datos.solicitudesPendientes, ...solicitudesLS]
+                .filter(s => s.estado === 'pendiente');
+            renderizarSolicitudes(todasSolicitudes, datos);
+
+            // Cargar devoluciones del día (préstamos activos/pendientes con vencimiento hoy o pasado)
+            const prestamosLS = JSON.parse(localStorage.getItem('biblio_prestamos') || '[]');
+            const todosPrestamos = [...datos.prestamos, ...prestamosLS];
+            const devolucionesHoy = todosPrestamos
+                .filter(p => (p.estado === 'activo' || p.estado === 'pendiente') && !p.fechaDevolucionReal);
+            renderizarDevoluciones(devolucionesHoy, datos);
+
+            // Cargar socios morosos (combinar datos.json + localStorage + préstamos vencidos)
+            const morososLS = JSON.parse(localStorage.getItem('biblio_morosos') || '[]');
+            const todosMorosos = [...datos.sociosMorosos, ...morososLS];
+            // También detectar morosos de préstamos vencidos
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            const prestamosVencidos = todosPrestamos.filter(p => {
+                if (p.estado !== 'activo' && p.estado !== 'pendiente') return false;
+                const venc = BiblioTech.parsearFecha(p.fechaDevolucion);
+                return venc && venc < hoy;
+            });
+            // Convertir préstamos vencidos a formato moroso
+            const morososDePrestamos = prestamosVencidos.map(p => {
+                const socio = datos.usuarios.find(u => u.nroSocio === p.nroSocio);
+                const diffTime = hoy - BiblioTech.parsearFecha(p.fechaDevolucion);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return {
+                    id: `vencido-${p.id}`,
+                    nroSocio: p.nroSocio,
+                    nombre: socio?.nombre || `Socio ${p.nroSocio}`,
+                    libroId: p.libroId,
+                    diasAtraso: diffDays,
+                    estado: 'pendiente'
+                };
+            });
+            const todosMorososCombinados = [...todosMorosos, ...morososDePrestamos];
+            renderizarMorosos(todosMorososCombinados, datos);
+        }
+
+        function renderizarSolicitudes(solicitudes, datos) {
+            const tbody = document.getElementById('tbody-solicitudes');
+            tbody.innerHTML = '';
+
+            if (solicitudes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1rem; color:#666;">No hay solicitudes pendientes.</td></tr>';
+                return;
+            }
+
+            solicitudes.forEach(s => {
+                const tr = document.createElement('tr');
+                const titulo = BiblioTech.obtenerTituloLibro(datos.libros, s.libroId);
+                const nombreSocio = s.nombreSocio || (datos.usuarios.find(u => u.nroSocio === s.nroSocio)?.nombre || `Socio ${s.nroSocio}`);
+
+                tr.innerHTML = `
+                    <td>${nombreSocio}</td>
+                    <td>${titulo}</td>
+                    <td>${s.fechaSolicitud}</td>
+                    <td>
+                        <button class="boton" onclick="aprobarEntrega('${s.id}')">Aprobar entrega</button>
+                        <button class="boton boton-secundario" onclick="rechazarSolicitud('${s.id}')">Rechazar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderizarDevoluciones(prestamos, datos) {
+            const tbody = document.getElementById('tbody-devoluciones');
+            tbody.innerHTML = '';
+
+            if (prestamos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1rem; color:#666;">No hay devoluciones programadas para hoy.</td></tr>';
+                return;
+            }
+
+            prestamos.forEach(p => {
+                const tr = document.createElement('tr');
+                const titulo = BiblioTech.obtenerTituloLibro(datos.libros, p.libroId);
+                const socio = datos.usuarios.find(u => u.nroSocio === p.nroSocio);
+                const nombreSocio = socio?.nombre || `Socio ${p.nroSocio}`;
+
+                tr.innerHTML = `
+                    <td>${nombreSocio}</td>
+                    <td>${titulo}</td>
+                    <td>${p.fechaDevolucion}</td>
+                    <td>
+                        <button class="boton" onclick="registrarDevolucion('${p.id}')">Registrar devolucion</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderizarMorosos(morosos, datos) {
+            const tbody = document.getElementById('tbody-morosos');
+            tbody.innerHTML = '';
+
+            if (morosos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1rem; color:#666;">No hay socios morosos.</td></tr>';
+                return;
+            }
+
+            morosos.forEach(m => {
+                const tr = document.createElement('tr');
+                const titulo = BiblioTech.obtenerTituloLibro(datos.libros, m.libroId);
+
+                tr.innerHTML = `
+                    <td>${m.nombre}</td>
+                    <td>${titulo}</td>
+                    <td>${m.diasAtraso}</td>
+                    <td>
+                        <button class="boton" onclick="notificarMoroso('${m.id}')">Enviar notificacion</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Acciones del bibliotecario
+        async function aprobarEntrega(solicitudId) {
+            const datos = await BiblioTech.obtenerDatos();
+            const solicitudesLS = JSON.parse(localStorage.getItem('biblio_solicitudes') || '[]');
+            const solicitud = solicitudesLS.find(s => s.id === solicitudId) ||
+                              datos.solicitudesPendientes.find(s => s.id === solicitudId);
+
+            if (!solicitud) {
+                BiblioTech.mostrarAviso('Solicitud no encontrada', 'error');
+                return;
+            }
+
+            // Cambiar estado a 'activo' en el préstamo correspondiente
+            const prestamosLS = JSON.parse(localStorage.getItem('biblio_prestamos') || '[]');
+            const prestamo = prestamosLS.find(p => p.nroSocio === solicitud.nroSocio && p.libroId === solicitud.libroId && p.estado === 'pendiente');
+
+            if (prestamo) {
+                BiblioTech.actualizarEnLS('biblio_prestamos', p => p.id === prestamo.id, { estado: 'activo' });
+            }
+
+            // Marcar solicitud como aprobada
+            BiblioTech.actualizarEnLS('biblio_solicitudes', s => s.id === solicitudId, { estado: 'aprobada' });
+
+            BiblioTech.mostrarAviso('Entrega aprobada correctamente', 'exito');
+            cargarPanelBibliotecario();
+        }
+
+        async function rechazarSolicitud(solicitudId) {
+            const datos = await BiblioTech.obtenerDatos();
+            const solicitudesLS = JSON.parse(localStorage.getItem('biblio_solicitudes') || '[]');
+            const solicitud = solicitudesLS.find(s => s.id === solicitudId);
+
+            if (!solicitud) {
+                BiblioTech.mostrarAviso('Solicitud no encontrada', 'error');
+                return;
+            }
+
+            // Devolver disponibilidad al libro
+            const librosLS = JSON.parse(localStorage.getItem('biblio_libros') || '[]');
+            const libroIdx = librosLS.findIndex(l => l.id === solicitud.libroId);
+            if (libroIdx !== -1) {
+                librosLS[libroIdx].disponibles = Math.min(librosLS[libroIdx].totalEjemplares, librosLS[libroIdx].disponibles + 1);
+                BiblioTech.guardarEnLS('biblio_libros', librosLS);
+            } else {
+                // Si no hay libros en LS, actualizar desde datos.json
+                const todosLibros = datos.libros.map(l => {
+                    if (l.id === solicitud.libroId) return { ...l, disponibles: Math.min(l.totalEjemplares, l.disponibles + 1) };
+                    return l;
+                });
+                BiblioTech.guardarEnLS('biblio_libros', todosLibros);
+            }
+
+            // Eliminar préstamo pendiente asociado
+            const prestamosLS = JSON.parse(localStorage.getItem('biblio_prestamos') || '[]');
+            const prestamoIdx = prestamosLS.findIndex(p => p.nroSocio === solicitud.nroSocio && p.libroId === solicitud.libroId && p.estado === 'pendiente');
+            if (prestamoIdx !== -1) {
+                prestamosLS.splice(prestamoIdx, 1);
+                BiblioTech.guardarEnLS('biblio_prestamos', prestamosLS);
+            }
+
+            // Marcar solicitud como rechazada
+            BiblioTech.actualizarEnLS('biblio_solicitudes', s => s.id === solicitudId, { estado: 'rechazada' });
+
+            BiblioTech.mostrarAviso('Solicitud rechazada, ejemplar devuelto a stock', 'exito');
+            cargarPanelBibliotecario();
+        }
+
+        async function registrarDevolucion(prestamoId) {
+            const prestamosLS = JSON.parse(localStorage.getItem('biblio_prestamos') || '[]');
+            const prestamo = prestamosLS.find(p => p.id === prestamoId);
+
+            if (!prestamo) {
+                // Buscar en datos.json
+                const datos = await BiblioTech.obtenerDatos();
+                const prestamoInicial = datos.prestamos.find(p => p.id === prestamoId);
+                if (prestamoInicial) {
+                    // Mover a localStorage como devuelto
+                    const nuevoPrestamo = { ...prestamoInicial, estado: 'devuelto', fechaDevolucionReal: new Date().toLocaleDateString('es-AR') };
+                    BiblioTech.agregarAListaLS('biblio_prestamos', nuevoPrestamo);
+                } else {
+                    BiblioTech.mostrarAviso('Prestamo no encontrado', 'error');
+                    return;
+                }
+            } else {
+                BiblioTech.actualizarEnLS('biblio_prestamos', p => p.id === prestamoId, {
+                    estado: 'devuelto',
+                    fechaDevolucionReal: new Date().toLocaleDateString('es-AR')
+                });
+            }
+
+            // Devolver disponibilidad al libro
+            const librosLS = JSON.parse(localStorage.getItem('biblio_libros') || '[]');
+            const libroIdx = librosLS.findIndex(l => l.id === prestamo.libroId);
+            if (libroIdx !== -1) {
+                librosLS[libroIdx].disponibles = Math.min(librosLS[libroIdx].totalEjemplares, librosLS[libroIdx].disponibles + 1);
+                BiblioTech.guardarEnLS('biblio_libros', librosLS);
+            } else {
+                const datos = await BiblioTech.obtenerDatos();
+                const todosLibros = datos.libros.map(l => {
+                    if (l.id === prestamo.libroId) return { ...l, disponibles: Math.min(l.totalEjemplares, l.disponibles + 1) };
+                    return l;
+                });
+                BiblioTech.guardarEnLS('biblio_libros', todosLibros);
+            }
+
+            BiblioTech.mostrarAviso('Devolucion registrada correctamente', 'exito');
+            cargarPanelBibliotecario();
+        }
+
+        function notificarMoroso(morosoId) {
+            // Simular envío de notificación
+            BiblioTech.mostrarAviso('Notificacion enviada al socio', 'exito');
+            // En una app real, aquí se marcaría como notificado
+        }
+
+        function generarReporteVencidos() {
+            BiblioTech.mostrarAviso('Generando reporte... (simulado)', 'info');
+        }
+
+        function darBajaEjemplar() {
+            BiblioTech.mostrarAviso('Funcion de baja de ejemplar (simulado)', 'info');
+        }
+
+        function registrarEjemplar() {
+            BiblioTech.mostrarAviso('Funcion de alta de ejemplar (simulado)', 'info');
+        }
+
+        // Exponer funciones globalmente para los onclick
+        window.aprobarEntrega = aprobarEntrega;
+        window.rechazarSolicitud = rechazarSolicitud;
+        window.registrarDevolucion = registrarDevolucion;
+        window.notificarMoroso = notificarMoroso;
+        window.generarReporteVencidos = generarReporteVencidos;
+        window.darBajaEjemplar = darBajaEjemplar;
+        window.registrarEjemplar = registrarEjemplar;
+
+        // Cargar panel al inicio
+        document.addEventListener('DOMContentLoaded', cargarPanelBibliotecario);
+    </script>
 
     <footer class="footer-principal">
         <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;

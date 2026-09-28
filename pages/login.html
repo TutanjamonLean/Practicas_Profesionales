@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BiblioTech - Iniciar sesion</title>
     <link rel="stylesheet" href="../styles.css">
+    <script src="../js/scripts.js"></script>
 </head>
 <body>
     <header class="header-principal">
@@ -35,7 +36,7 @@
             </p>
         </section>
 
-        <form action="../index.html" method="get">
+        <form id="form-login">
             <fieldset>
                 <legend>Datos de acceso</legend>
 
@@ -60,7 +61,45 @@
             </p>
         </form>
 
+        <aside>
+            <strong>Credenciales de prueba:</strong>
+            <ul style="margin: 0.5rem 0; padding-left: 1.5rem; font-size: 0.9rem;">
+                <li>Socios: <code>mgarcia</code> / <code>1234</code>, <code>psuarez</code> / <code>1234</code></li>
+                <li>Bibliotecarios: <code>blopez</code> / <code>1234</code>, <code>crodriguez</code> / <code>1234</code></li>
+                <li>Directores: <code>dperez</code> / <code>1234</code>, <code>mgomez</code> / <code>1234</code></li>
+            </ul>
+            <p><a class="boton boton-secundario" href="../index.html">Volver al inicio</a></p>
+        </aside>
     </main>
+
+    <script>
+        document.getElementById('form-login').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const usuario = document.getElementById('usuario').value.trim();
+            const clave = document.getElementById('clave').value;
+            const rol = document.getElementById('rol').value;
+
+            if (!usuario || !clave) {
+                BiblioTech.mostrarAviso('Complete usuario y contraseña', 'error');
+                return;
+            }
+
+            const user = await BiblioTech.login(usuario, clave, rol);
+            if (user) {
+                BiblioTech.mostrarAviso(`Bienvenido, ${user.nombre} (${user.rol})`, 'exito');
+                setTimeout(() => {
+                    const destinos = {
+                        socio: 'catalogo.html',
+                        bibliotecario: 'panel-bibliotecario.html',
+                        director: 'tablero-director.html'
+                    };
+                    window.location.href = destinos[user.rol] || 'catalogo.html';
+                }, 800);
+            } else {
+                BiblioTech.mostrarAviso('Credenciales incorrectas o rol no coincide', 'error');
+            }
+        });
+    </script>
 
     <footer class="footer-principal">
         <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;

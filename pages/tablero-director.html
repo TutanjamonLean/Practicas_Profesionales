@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BiblioTech - Tablero del director</title>
     <link rel="stylesheet" href="../styles.css">
+    <script src="../js/scripts.js"></script>
 </head>
 <body>
     <header class="header-principal">
@@ -45,27 +46,8 @@
                         <th scope="col">Valor</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>Socios activos</td>
-                        <td>1.284</td>
-                    </tr>
-                    <tr>
-                        <td>Prestamos vigentes</td>
-                        <td>312</td>
-                    </tr>
-                    <tr>
-                        <td>Prestamos vencidos</td>
-                        <td>27</td>
-                    </tr>
-                    <tr>
-                        <td>Ejemplares en sala (uso interno)</td>
-                        <td>48</td>
-                    </tr>
-                    <tr>
-                        <td>Ejemplares disponibles para prestamo</td>
-                        <td>5.430</td>
-                    </tr>
+                <tbody id="tbody-indicadores">
+                    <!-- Carga dinamica -->
                 </tbody>
             </table>
         </section>
@@ -80,27 +62,8 @@
                         <th scope="col">Prestamos</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>Novela</td>
-                        <td>412</td>
-                    </tr>
-                    <tr>
-                        <td>Infantil</td>
-                        <td>298</td>
-                    </tr>
-                    <tr>
-                        <td>Ensayo</td>
-                        <td>187</td>
-                    </tr>
-                    <tr>
-                        <td>Ciencia</td>
-                        <td>154</td>
-                    </tr>
-                    <tr>
-                        <td>Poesia</td>
-                        <td>96</td>
-                    </tr>
+                <tbody id="tbody-categorias">
+                    <!-- Carga dinamica -->
                 </tbody>
             </table>
         </section>
@@ -116,33 +79,141 @@
                         <th scope="col">Stock actual</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>La metamorfosis</td>
-                        <td>Franz Kafka</td>
-                        <td>0</td>
-                    </tr>
-                    <tr>
-                        <td>Cosmos</td>
-                        <td>Carl Sagan</td>
-                        <td>1</td>
-                    </tr>
-                    <tr>
-                        <td>El tunel</td>
-                        <td>Ernesto Sabato</td>
-                        <td>0</td>
-                    </tr>
+                <tbody id="tbody-faltantes">
+                    <!-- Carga dinamica -->
                 </tbody>
             </table>
         </section>
 
         <aside>
             <strong>Sugerencia:</strong> Los datos mostrados aqui
-            provienen del modulo de reportes del sistema. En el
-            Hito 03 se conectaran al servidor Node.js para
-            actualizarse automaticamente.
+            se calculan dinamicamente a partir de los datos del sistema
+            (datos.json + localStorage).
         </aside>
     </main>
+
+    <script>
+        async function cargarTableroDirector() {
+            if (!BiblioTech.requerirAuth('director')) return;
+
+            const datos = await BiblioTech.obtenerDatos();
+
+            // Combinar préstamos
+            const prestamosLS = JSON.parse(localStorage.getItem('biblio_prestamos') || '[]');
+            const todosPrestamos = [...datos.prestamos, ...prestamosLS];
+
+            // Combinar libros
+            const librosLS = JSON.parse(localStorage.getItem('biblio_libros') || '[]');
+            const todosLibros = librosLS.length > 0 ? librosLS : datos.libros;
+
+            // Combinar usuarios
+            const usuarios = datos.usuarios;
+
+            renderizarIndicadores(todosPrestamos, todosLibros, usuarios);
+            renderizarCategorias(todosPrestamos, todosLibros);
+            renderizarFaltantes(todosLibros);
+        }
+
+        function renderizarIndicadores(prestamos, libros, usuarios) {
+            const tbody = document.getElementById('tbody-indicadores');
+
+            // Socios activos (usuarios con rol socio)
+            const sociosActivos = usuarios.filter(u => u.rol === 'socio').length;
+
+            // Préstamos vigentes (activos + pendientes)
+            const prestamosVigentes = prestamos.filter(p => p.estado === 'activo' || p.estado === 'pendiente').length;
+
+            // Préstamos vencidos
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            const prestamosVencidos = prestamos.filter(p => {
+                if (p.estado !== 'activo' && p.estado !== 'pendiente') return false;
+                const venc = BiblioTech.parsearFecha(p.fechaDevolucion);
+                return venc && venc < hoy;
+            }).length;
+
+            // Ejemplares en sala (solo consulta en sala)
+            const ejemplaresEnSala = libros.filter(l => l.soloSala).reduce((sum, l) => sum + l.totalEjemplares, 0);
+
+            // Ejemplares disponibles para préstamo
+            const disponiblesPrestamo = libros
+                .filter(l => !l.soloSala)
+                .reduce((sum, l) => sum + l.disponibles, 0);
+
+            const indicadores = [
+                { label: 'Socios activos', valor: sociosActivos },
+                { label: 'Prestamos vigentes', valor: prestamosVigentes },
+                { label: 'Prestamos vencidos', valor: prestamosVencidos },
+                { label: 'Ejemplares en sala (uso interno)', valor: ejemplaresEnSala },
+                { label: 'Ejemplares disponibles para prestamo', valor: disponiblesPrestamo }
+            ];
+
+            tbody.innerHTML = indicadores.map(i => `
+                <tr>
+                    <td>${i.label}</td>
+                    <td>${i.valor}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderizarCategorias(prestamos, libros) {
+            const tbody = document.getElementById('tbody-categorias');
+
+            // Contar préstamos por género (solo devueltos y activos como "leídos")
+            const prestamosCompletados = prestamos.filter(p => p.estado === 'devuelto' || p.estado === 'activo' || p.estado === 'pendiente');
+
+            const conteoPorGenero = {};
+            prestamosCompletados.forEach(p => {
+                const libro = libros.find(l => l.id === p.libroId);
+                if (libro) {
+                    const genero = libro.genero.charAt(0).toUpperCase() + libro.genero.slice(1);
+                    conteoPorGenero[genero] = (conteoPorGenero[genero] || 0) + 1;
+                }
+            });
+
+            // Ordenar por cantidad descendente
+            const categoriasOrdenadas = Object.entries(conteoPorGenero)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5); // Top 5
+
+            if (categoriasOrdenadas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:1rem; color:#666;">No hay datos de prestamos para mostrar.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = categoriasOrdenadas.map(([genero, count]) => `
+                <tr>
+                    <td>${genero}</td>
+                    <td>${count}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderizarFaltantes(libros) {
+            const tbody = document.getElementById('tbody-faltantes');
+
+            // Libros con 0 o 1 ejemplar disponible (y que no sean solo sala)
+            const faltantes = libros
+                .filter(l => !l.soloSala && l.disponibles <= 1)
+                .sort((a, b) => a.disponibles - b.disponibles);
+
+            if (faltantes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:1rem; color:#666;">No hay titulos con stock bajo.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = faltantes.map(l => `
+                <tr>
+                    <td>${l.titulo}</td>
+                    <td>${l.autor}</td>
+                    <td>${l.disponibles}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Cargar tablero al inicio
+        document.addEventListener('DOMContentLoaded', cargarTableroDirector);
+    </script>
 
     <footer class="footer-principal">
         <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;

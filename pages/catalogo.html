@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BiblioTech - Catalogo</title>
     <link rel="stylesheet" href="../styles.css">
+    <script src="../js/scripts.js"></script>
 </head>
 <body>
     <header class="header-principal">
@@ -34,7 +35,7 @@
             </p>
         </section>
 
-        <form action="catalogo.html" method="get">
+        <form id="form-buscar">
             <fieldset>
                 <legend>Buscar libro</legend>
                 <label for="termino">Titulo, autor o genero</label>
@@ -50,6 +51,10 @@
                     <option value="ciencia">Ciencia</option>
                     <option value="historia">Historia</option>
                     <option value="infantil">Infantil</option>
+                    <option value="cuento">Cuento</option>
+                    <option value="novela corta">Novela corta</option>
+                    <option value="divulgacion cientifica">Divulgacion cientifica</option>
+                    <option value="coleccion unica">Coleccion unica</option>
                 </select>
 
                 <label for="disponible">Solo disponibles</label>
@@ -65,51 +70,8 @@
         <section>
             <h2>Resultados de la busqueda</h2>
 
-            <div class="catalogo">
-
-                <article class="libro">
-                    <h3>Ficciones</h3>
-                    <p class="meta">Jorge Luis Borges &middot; Cuento &middot; 1944</p>
-                    <p><span class="etiqueta etiqueta-activo">3 disponibles</span></p>
-                    <p><a class="boton" href="reserva.html">Reservar</a></p>
-                </article>
-
-                <article class="libro">
-                    <h3>Rayuela</h3>
-                    <p class="meta">Julio Cortazar &middot; Novela &middot; 1963</p>
-                    <p><span class="etiqueta etiqueta-activo">2 disponibles</span></p>
-                    <p><a class="boton" href="reserva.html">Reservar</a></p>
-                </article>
-
-                <article class="libro">
-                    <h3>Cien anos de soledad</h3>
-                    <p class="meta">Gabriel Garcia Marquez &middot; Novela &middot; 1967</p>
-                    <p><span class="etiqueta etiqueta-activo">5 disponibles</span></p>
-                    <p><a class="boton" href="reserva.html">Reservar</a></p>
-                </article>
-
-                <article class="libro">
-                    <h3>Cosmos</h3>
-                    <p class="meta">Carl Sagan &middot; Divulgacion cientifica &middot; 1980</p>
-                    <p><span class="etiqueta etiqueta-activo">1 disponible</span></p>
-                    <p><a class="boton" href="reserva.html">Reservar</a></p>
-                </article>
-
-                <article class="libro">
-                    <h3>La metamorfosis</h3>
-                    <p class="meta">Franz Kafka &middot; Novela corta &middot; 1915</p>
-                    <p class="aviso aviso-error"><strong>Sin stock disponible.</strong>
-                       Te avisaremos cuando se devuelva un ejemplar.</p>
-                </article>
-
-                <article class="libro">
-                    <h3>Edicion critica de manuscritos coloniales (siglo XVII)</h3>
-                    <p class="meta">Varios autores &middot; Coleccion unica</p>
-                    <p><span class="etiqueta etiqueta-sala">Solo consulta en sala</span></p>
-                    <p>Este ejemplar no se presta a domicilio por ser
-                       parte de la coleccion unica resguardada.</p>
-                </article>
-
+            <div class="catalogo" id="catalogo-libros">
+                <!-- Los libros se cargaran dinamicamente aqui -->
             </div>
         </section>
 
@@ -120,6 +82,86 @@
             completara la operacion.
         </aside>
     </main>
+
+    <script>
+        let todosLosLibros = [];
+
+        async function cargarLibros() {
+            const datos = await BiblioTech.obtenerDatos();
+            todosLosLibros = datos.libros;
+            renderizarLibros(todosLosLibros);
+        }
+
+        function renderizarLibros(libros) {
+            const contenedor = document.getElementById('catalogo-libros');
+            contenedor.innerHTML = '';
+
+            if (libros.length === 0) {
+                contenedor.innerHTML = '<p class="aviso">No se encontraron libros que coincidan con la busqueda.</p>';
+                return;
+            }
+
+            libros.forEach(libro => {
+                const article = document.createElement('article');
+                article.className = 'libro';
+
+                let etiquetaHtml = '';
+                if (libro.soloSala) {
+                    etiquetaHtml = '<p><span class="etiqueta etiqueta-sala">Solo consulta en sala</span></p>';
+                } else if (libro.disponibles > 0) {
+                    etiquetaHtml = `<p><span class="etiqueta etiqueta-activo">${libro.disponibles} disponible${libro.disponibles > 1 ? 's' : ''}</span></p>`;
+                } else {
+                    etiquetaHtml = '<p class="aviso aviso-error"><strong>Sin stock disponible.</strong> Te avisaremos cuando se devuelva un ejemplar.</p>';
+                }
+
+                const puedeReservar = !libro.soloSala && libro.disponibles > 0;
+                const botonReserva = puedeReservar
+                    ? `<p><a class="boton" href="reserva.html?libro=${libro.id}">Reservar</a></p>`
+                    : '';
+
+                article.innerHTML = `
+                    <h3>${libro.titulo}</h3>
+                    <p class="meta">${libro.autor} &middot; ${libro.genero} &middot; ${libro.anio}</p>
+                    ${etiquetaHtml}
+                    ${botonReserva}
+                `;
+                contenedor.appendChild(article);
+            });
+        }
+
+        function filtrarLibros() {
+            const termino = document.getElementById('termino').value.toLowerCase().trim();
+            const genero = document.getElementById('genero').value.toLowerCase();
+            const soloDisponibles = document.getElementById('disponible').checked;
+
+            let filtrados = todosLosLibros.filter(libro => {
+                const coincideTermino = !termino ||
+                    libro.titulo.toLowerCase().includes(termino) ||
+                    libro.autor.toLowerCase().includes(termino) ||
+                    libro.genero.toLowerCase().includes(termino);
+
+                const coincideGenero = !genero || libro.genero.toLowerCase() === genero;
+
+                const coincideDisponibilidad = !soloDisponibles || (libro.disponibles > 0 && !libro.soloSala);
+
+                return coincideTermino && coincideGenero && coincideDisponibilidad;
+            });
+
+            renderizarLibros(filtrados);
+        }
+
+        document.getElementById('form-buscar').addEventListener('submit', (e) => {
+            e.preventDefault();
+            filtrarLibros();
+        });
+
+        document.getElementById('form-buscar').addEventListener('reset', () => {
+            setTimeout(() => renderizarLibros(todosLosLibros), 0);
+        });
+
+        // Cargar libros al inicio
+        document.addEventListener('DOMContentLoaded', cargarLibros);
+    </script>
 
     <footer class="footer-principal">
         <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;

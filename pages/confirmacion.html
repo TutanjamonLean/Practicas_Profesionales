@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BiblioTech - Reserva confirmada</title>
     <link rel="stylesheet" href="../styles.css">
+    <script src="../js/scripts.js"></script>
 </head>
 <body>
     <header class="header-principal">
@@ -27,7 +28,7 @@
     <main>
         <section>
             <h2>Reserva confirmada</h2>
-            <div class="aviso aviso-exito" role="status">
+            <div class="aviso aviso-exito" role="status" id="mensaje-exito">
                 <strong>Tu solicitud de prestamo fue registrada correctamente.</strong>
             </div>
         </section>
@@ -37,31 +38,8 @@
 
             <table>
                 <caption>Detalle de la reserva</caption>
-                <tbody>
-                    <tr>
-                        <th scope="row">Titulo</th>
-                        <td>Ficciones</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Autor</th>
-                        <td>Jorge Luis Borges</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Socio</th>
-                        <td>Nro. 12345</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Fecha de la solicitud</th>
-                        <td>10/08/2026</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Fecha limite de devolucion</th>
-                        <td>24/08/2026</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Estado</th>
-                        <td><span class="etiqueta etiqueta-activo">Reservado</span></td>
-                    </tr>
+                <tbody id="detalle-reserva">
+                    <!-- Se llena dinamicamente -->
                 </tbody>
             </table>
 
@@ -83,6 +61,48 @@
             <a class="boton boton-secundario" href="../index.html">Ir al inicio</a>
         </p>
     </main>
+
+    <script>
+        function cargarConfirmacion() {
+            const params = new URLSearchParams(window.location.search);
+
+            const titulo = params.get('titulo') || 'Desconocido';
+            const autor = params.get('autor') || 'Desconocido';
+            const socio = params.get('socio') || 'Desconocido';
+            const fechaRetiro = params.get('fechaRetiro') || new Date().toLocaleDateString('es-AR');
+            const fechaDevolucion = params.get('fechaDevolucion') || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('es-AR');
+
+            const tbody = document.getElementById('detalle-reserva');
+            tbody.innerHTML = `
+                <tr>
+                    <th scope="row">Titulo</th>
+                    <td>${titulo}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Autor</th>
+                    <td>${autor}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Socio</th>
+                    <td>Nro. ${socio}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Fecha de la solicitud</th>
+                    <td>${fechaRetiro}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Fecha limite de devolucion</th>
+                    <td>${fechaDevolucion}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Estado</th>
+                    <td><span class="etiqueta etiqueta-activo">Reservado (pendiente de aprobacion)</span></td>
+                </tr>
+            `;
+        }
+
+        document.addEventListener('DOMContentLoaded', cargarConfirmacion);
+    </script>
 
     <footer class="footer-principal">
         <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;

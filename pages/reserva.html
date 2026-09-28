@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BiblioTech - Reservar libro</title>
     <link rel="stylesheet" href="../styles.css">
+    <script src="../js/scripts.js"></script>
 </head>
 <body>
     <header class="header-principal">
@@ -35,21 +36,17 @@
             </p>
         </section>
 
-        <form action="confirmacion.html" method="get">
+        <form id="form-reserva">
             <fieldset>
                 <legend>Libro a reservar</legend>
 
                 <label for="titulo">Titulo</label>
-                <input type="text" id="titulo" name="titulo" required
-                       placeholder="Ej: Ficciones">
+                <input type="text" id="titulo" name="titulo" required readonly>
 
                 <label for="autor">Autor</label>
-                <input type="text" id="autor" name="autor"
-                       placeholder="Ej: Jorge Luis Borges">
+                <input type="text" id="autor" name="autor" readonly>
 
-                <label for="ejemplar">Numero de ejemplar</label>
-                <input type="number" id="ejemplar" name="ejemplar"
-                       min="1" max="10" placeholder="1">
+                <input type="hidden" id="libroId" name="libroId">
             </fieldset>
 
             <fieldset>
@@ -57,7 +54,7 @@
 
                 <label for="socio">Nro. de socio</label>
                 <input type="text" id="socio" name="socio" required
-                       placeholder="Ej: 12345">
+                       placeholder="Ej: 1001">
 
                 <label for="retiro">Fecha estimada de retiro</label>
                 <input type="date" id="retiro" name="retiro">
@@ -76,6 +73,169 @@
             en sala.
         </aside>
     </main>
+
+    <script>
+        let libroSeleccionado = null;
+
+        async function cargarLibroDesdeURL() {
+            const params = new URLSearchParams(window.location.search);
+            const libroId = params.get('libro');
+
+            if (!libroId) {
+                BiblioTech.mostrarAviso('No se especifico un libro para reservar', 'error');
+                document.getElementById('form-reserva').style.display = 'none';
+                return;
+            }
+
+            const datos = await BiblioTech.obtenerDatos();
+            libroSeleccionado = datos.libros.find(l => l.id === parseInt(libroId));
+
+            if (!libroSeleccionado) {
+                BiblioTech.mostrarAviso('Libro no encontrado', 'error');
+                document.getElementById('form-reserva').style.display = 'none';
+                return;
+            }
+
+            // Verificar disponibilidad
+            if (libroSeleccionado.soloSala) {
+                BiblioTech.mostrarAviso('Este libro es de consulta en sala unicamente, no se puede reservar', 'error');
+                document.getElementById('form-reserva').querySelector('button[type="submit"]').disabled = true;
+            } else if (libroSeleccionado.disponibles <= 0) {
+                BiblioTech.mostrarAviso('No hay ejemplares disponibles de este libro', 'error');
+                document.getElementById('form-reserva').querySelector('button[type="submit"]').disabled = true;
+            }
+
+            // Llenar formulario
+            document.getElementById('libroId').value = libroSeleccionado.id;
+            document.getElementById('titulo').value = libroSeleccionado.titulo;
+            document.getElementById('autor').value = libroSeleccionado.autor;
+
+            // Pre-llenar nro de socio si hay usuario logueado
+            const user = BiblioTech.obtenerUsuarioActual();
+            if (user && user.nroSocio) {
+                document.getElementById('socio').value = user.nroSocio;
+            }
+
+            // Establecer fecha de hoy como minima
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('retiro').min = hoy;
+            document.getElementById('retiro').value = hoy;
+        }
+
+        function contarPrestamosActivos(nroSocio) {
+            const prestamosLS = JSON.parse(localStorage.getItem('biblio_prestamos') || '[]');
+            const datosIniciales = JSON.parse(localStorage.getItem('biblio_datos_iniciales') || '{}');
+            // Nota: en una implementación real haríamos fetch a datos.json
+            // Por simplicidad, contamos solo los de localStorage + los del usuario actual en datos.json
+            // Para el Hito 3, usamos una aproximación simple
+            return prestamosLS.filter(p => p.nroSocio === nroSocio && (p.estado === 'activo' || p.estado === 'pendiente')).length;
+        }
+
+        document.getElementById('form-reserva').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!libroSeleccionado) {
+                BiblioTech.mostrarAviso('Error: libro no cargado', 'error');
+                return;
+            }
+
+            const nroSocio = document.getElementById('socio').value.trim();
+            const fechaRetiro = document.getElementById('retiro').value;
+
+            if (!nroSocio) {
+                BiblioTech.mostrarAviso('Ingrese su numero de socio', 'error');
+                return;
+            }
+
+            // Verificar que el socio existe
+            const datos = await BiblioTech.obtenerDatos();
+            const socio = datos.usuarios.find(u => u.nroSocio === nroSocio && u.rol === 'socio');
+            if (!socio) {
+                BiblioTech.mostrarAviso('Numero de socio no encontrado', 'error');
+                return;
+            }
+
+            // Verificar cupo (máximo 3 préstamos activos/pendientes)
+            const prestamosLS = JSON.parse(localStorage.getItem('biblio_prestamos') || '[]');
+            const prestamosIniciales = datos.prestamos || [];
+            const prestamosActivos = [...prestamosLS, ...prestamosIniciales]
+                .filter(p => p.nroSocio === nroSocio && (p.estado === 'activo' || p.estado === 'pendiente')).length;
+
+            if (prestamosActivos >= 3) {
+                BiblioTech.mostrarAviso('Ya tiene 3 prestamos activos. No puede reservar mas libros.', 'error');
+                return;
+            }
+
+            // Verificar disponibilidad del libro
+            const librosLS = JSON.parse(localStorage.getItem('biblio_libros') || '[]');
+            const libroActual = librosLS.find(l => l.id === libroSeleccionado.id) || libroSeleccionado;
+            if (libroActual.disponibles <= 0) {
+                BiblioTech.mostrarAviso('Ya no hay ejemplares disponibles', 'error');
+                return;
+            }
+
+            // Crear préstamo
+            const nuevoPrestamo = {
+                id: BiblioTech.generarId(),
+                nroSocio: nroSocio,
+                libroId: libroSeleccionado.id,
+                fechaRetiro: fechaRetiro || new Date().toLocaleDateString('es-AR'),
+                fechaDevolucion: fechaRetiro
+                    ? new Date(new Date(fechaRetiro).getTime() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('es-AR')
+                    : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('es-AR'),
+                estado: 'pendiente',
+                fechaDevolucionReal: null
+            };
+
+            // Guardar en localStorage
+            BiblioTech.agregarAListaLS('biblio_prestamos', nuevoPrestamo);
+
+            // Actualizar disponibilidad del libro
+            const librosActualizados = librosLS.map(l => {
+                if (l.id === libroSeleccionado.id) {
+                    return { ...l, disponibles: Math.max(0, l.disponibles - 1) };
+                }
+                return l;
+            });
+            if (librosLS.length === 0) {
+                // Si no hay libros en LS, crear array con el libro actualizado
+                const todosLibros = datos.libros.map(l => {
+                    if (l.id === libroSeleccionado.id) {
+                        return { ...l, disponibles: Math.max(0, l.disponibles - 1) };
+                    }
+                    return l;
+                });
+                BiblioTech.guardarEnLS('biblio_libros', todosLibros);
+            } else {
+                BiblioTech.guardarEnLS('biblio_libros', librosActualizados);
+            }
+
+            // Agregar a solicitudes pendientes para el bibliotecario
+            const nuevaSolicitud = {
+                id: BiblioTech.generarId(),
+                nroSocio: nroSocio,
+                nombreSocio: socio.nombre,
+                libroId: libroSeleccionado.id,
+                fechaSolicitud: new Date().toLocaleDateString('es-AR'),
+                estado: 'pendiente'
+            };
+            BiblioTech.agregarAListaLS('biblio_solicitudes', nuevaSolicitud);
+
+            // Redirigir a confirmación con datos del préstamo
+            const params = new URLSearchParams({
+                prestamoId: nuevoPrestamo.id,
+                titulo: libroSeleccionado.titulo,
+                autor: libroSeleccionado.autor,
+                socio: nroSocio,
+                fechaRetiro: nuevoPrestamo.fechaRetiro,
+                fechaDevolucion: nuevoPrestamo.fechaDevolucion
+            });
+            window.location.href = `confirmacion.html?${params.toString()}`;
+        });
+
+        // Cargar libro al inicio
+        document.addEventListener('DOMContentLoaded', cargarLibroDesdeURL);
+    </script>
 
     <footer class="footer-principal">
         <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;

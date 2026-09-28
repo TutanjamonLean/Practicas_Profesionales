@@ -149,6 +149,12 @@ aside {
     color: #1b4d1f;
 }
 
+.aviso-info {
+    background-color: #e3eaf3;
+    border: 2px solid #163d5c;
+    color: #163d5c;
+}
+
 /* --- Tarjetas de presentacion de roles --- */
 .tarjetas-roles {
     display: flex;

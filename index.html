@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BiblioTech - Inicio</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="js/scripts.js"></script>
 </head>
 <body>
     <header class="header-principal">
@@ -25,7 +26,7 @@
     </nav>
 
     <main>
-        <section>
+        <section id="bienvenida">
             <h2>Sistema de gestion de biblioteca</h2>
             <p>
                 BiblioTech es la plataforma web de la Biblioteca Provincial
@@ -38,10 +39,10 @@
             </p>
         </section>
 
-        <section>
+        <section id="acceso-roles">
             <h2>Acceso segun tu rol</h2>
             <div class="tarjetas-roles">
-                <article class="tarjeta-rol">
+                <article class="tarjeta-rol" data-rol="socio">
                     <h3>Socio</h3>
                     <p>
                         Busca libros en el catalogo, solicita prestamos,
@@ -51,7 +52,7 @@
                     <p><a class="boton" href="pages/catalogo.html">Entrar al catalogo</a></p>
                 </article>
 
-                <article class="tarjeta-rol">
+                <article class="tarjeta-rol" data-rol="bibliotecario">
                     <h3>Bibliotecario</h3>
                     <p>
                         Atiende el mostrador: aprueba entregas, registra
@@ -62,7 +63,7 @@
                     <p><a class="boton" href="pages/panel-bibliotecario.html">Ir al panel</a></p>
                 </article>
 
-                <article class="tarjeta-rol">
+                <article class="tarjeta-rol" data-rol="director">
                     <h3>Director</h3>
                     <p>
                         Consulta el tablero de control unificado con el
@@ -74,14 +75,85 @@
             </div>
         </section>
 
-        <aside>
+        <aside id="aviso-visitante">
             <strong>Aviso:</strong> Para acceder a las funcionalidades
             protegidas (prestamo, historial, panel de administracion) es
             necesario iniciar sesion con credenciales de socio o personal
             de la biblioteca.
             <p><a class="boton boton-secundario" href="pages/login.html">Iniciar sesion</a></p>
         </aside>
+
+        <aside id="aviso-usuario" style="display:none; background-color:#e6f4ea; border-left-color:#2e7d32;">
+            <!-- Se llena dinamicamente -->
+        </aside>
     </main>
+
+    <script>
+        function actualizarInicio() {
+            const user = BiblioTech.obtenerUsuarioActual();
+            const bienvenida = document.getElementById('bienvenida');
+            const accesoRoles = document.getElementById('acceso-roles');
+            const avisoVisitante = document.getElementById('aviso-visitante');
+            const avisoUsuario = document.getElementById('aviso-usuario');
+
+            if (user) {
+                // Usuario logueado: mostrar bienvenida personalizada
+                bienvenida.querySelector('h2').textContent = `Bienvenido, ${user.nombre}`;
+                bienvenida.querySelector('p').textContent = `Has iniciado sesion como ${user.rol}.`;
+
+                // Ocultar tarjetas de roles que no corresponden
+                document.querySelectorAll('.tarjeta-rol').forEach(tarjeta => {
+                    const rolTarjeta = tarjeta.dataset.rol;
+                    tarjeta.style.display = rolTarjeta === user.rol ? '' : 'none';
+                });
+
+                avisoVisitante.style.display = 'none';
+
+                // Mostrar aviso personalizado según rol
+                let mensaje = '';
+                let enlaceAccion = '';
+                let textoEnlace = '';
+
+                switch (user.rol) {
+                    case 'socio':
+                        mensaje = 'Como socio, puedes buscar libros, reservar ejemplares y consultar tu historial.';
+                        enlaceAccion = 'pages/catalogo.html';
+                        textoEnlace = 'Ir al catalogo';
+                        break;
+                    case 'bibliotecario':
+                        mensaje = 'Como bibliotecario, puedes gestionar prestamos, devoluciones y notificaciones.';
+                        enlaceAccion = 'pages/panel-bibliotecario.html';
+                        textoEnlace = 'Ir al panel de bibliotecario';
+                        break;
+                    case 'director':
+                        mensaje = 'Como director, puedes ver el tablero de control con estadisticas del sistema.';
+                        enlaceAccion = 'pages/tablero-director.html';
+                        textoEnlace = 'Ver tablero del director';
+                        break;
+                }
+
+                avisoUsuario.innerHTML = `
+                    <strong>Sesion activa:</strong> ${mensaje}
+                    <p><a class="boton" href="${enlaceAccion}">${textoEnlace}</a></p>
+                `;
+                avisoUsuario.style.display = 'block';
+            } else {
+                // Visitante: mostrar vista por defecto
+                bienvenida.querySelector('h2').textContent = 'Sistema de gestion de biblioteca';
+                bienvenida.querySelector('p').textContent = 'BiblioTech es la plataforma web de la Biblioteca Provincial "Manuel Belgrano" para la gestion de prestamos de libros, el control de inventario y la administracion de socios. Su objetivo es optimizar el acceso a la cultura por parte de los vecinos, permitiendo consultar la disponibilidad del material bibliografico y reservar ejemplares de manera rapida y segura.';
+
+                document.querySelectorAll('.tarjeta-rol').forEach(tarjeta => {
+                    tarjeta.style.display = '';
+                });
+
+                avisoVisitante.style.display = 'block';
+                avisoUsuario.style.display = 'none';
+            }
+        }
+
+        // Actualizar al cargar
+        document.addEventListener('DOMContentLoaded', actualizarInicio);
+    </script>
 
     <footer class="footer-principal">
         <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;

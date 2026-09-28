@@ -1,0 +1,291 @@
+{
+  "usuarios": [
+    {
+      "id": 1,
+      "usuario": "mgarcia",
+      "clave": "1234",
+      "rol": "socio",
+      "nombre": "Mariana García",
+      "email": "mgarcia@email.com",
+      "nroSocio": "1001",
+      "esMenor": false
+    },
+    {
+      "id": 2,
+      "usuario": "psuarez",
+      "clave": "1234",
+      "rol": "socio",
+      "nombre": "Pablo Suárez",
+      "email": "psuarez@email.com",
+      "nroSocio": "1002",
+      "esMenor": false
+    },
+    {
+      "id": 3,
+      "usuario": "blopez",
+      "clave": "1234",
+      "rol": "bibliotecario",
+      "nombre": "Beatriz López",
+      "email": "blopez@biblioteca.gov.ar",
+      "legajo": "BIB-001"
+    },
+    {
+      "id": 4,
+      "usuario": "crodriguez",
+      "clave": "1234",
+      "rol": "bibliotecario",
+      "nombre": "Carlos Rodríguez",
+      "email": "crodriguez@biblioteca.gov.ar",
+      "legajo": "BIB-002"
+    },
+    {
+      "id": 5,
+      "usuario": "dperez",
+      "clave": "1234",
+      "rol": "director",
+      "nombre": "Daniel Pérez",
+      "email": "dperez@biblioteca.gov.ar",
+      "legajo": "DIR-001"
+    },
+    {
+      "id": 6,
+      "usuario": "mgomez",
+      "clave": "1234",
+      "rol": "director",
+      "nombre": "María Gómez",
+      "email": "mgomez@biblioteca.gov.ar",
+      "legajo": "DIR-002"
+    }
+  ],
+  "libros": [
+    {
+      "id": 1,
+      "titulo": "Ficciones",
+      "autor": "Jorge Luis Borges",
+      "genero": "cuento",
+      "anio": 1944,
+      "disponibles": 3,
+      "totalEjemplares": 3,
+      "soloSala": false,
+      "descripcion": "Colección de cuentos que incluye 'El Aleph', 'La biblioteca de Babel' y 'Funes el memorioso'."
+    },
+    {
+      "id": 2,
+      "titulo": "Rayuela",
+      "autor": "Julio Cortázar",
+      "genero": "novela",
+      "anio": 1963,
+      "disponibles": 2,
+      "totalEjemplares": 2,
+      "soloSala": false,
+      "descripcion": "Novela experimental que puede leerse en dos órdenes diferentes."
+    },
+    {
+      "id": 3,
+      "titulo": "Cien años de soledad",
+      "autor": "Gabriel García Márquez",
+      "genero": "novela",
+      "anio": 1967,
+      "disponibles": 5,
+      "totalEjemplares": 5,
+      "soloSala": false,
+      "descripcion": "Obra cumbre del realismo mágico latinoamericano."
+    },
+    {
+      "id": 4,
+      "titulo": "Cosmos",
+      "autor": "Carl Sagan",
+      "genero": "ciencia",
+      "anio": 1980,
+      "disponibles": 1,
+      "totalEjemplares": 1,
+      "soloSala": false,
+      "descripcion": "Divulgación científica sobre el universo y la vida."
+    },
+    {
+      "id": 5,
+      "titulo": "La metamorfosis",
+      "autor": "Franz Kafka",
+      "genero": "novela corta",
+      "anio": 1915,
+      "disponibles": 0,
+      "totalEjemplares": 2,
+      "soloSala": false,
+      "descripcion": "Relato sobre la transformación de Gregorio Samsa en insecto."
+    },
+    {
+      "id": 6,
+      "titulo": "Edición crítica de manuscritos coloniales (siglo XVII)",
+      "autor": "Varios autores",
+      "genero": "historia",
+      "anio": 2020,
+      "disponibles": 1,
+      "totalEjemplares": 1,
+      "soloSala": true,
+      "descripcion": "Colección única de consulta en sala únicamente."
+    },
+    {
+      "id": 7,
+      "titulo": "El Aleph",
+      "autor": "Jorge Luis Borges",
+      "genero": "cuento",
+      "anio": 1949,
+      "disponibles": 2,
+      "totalEjemplares": 2,
+      "soloSala": false,
+      "descripcion": "Cuento sobre un punto en el espacio que contiene todos los demás puntos."
+    },
+    {
+      "id": 8,
+      "titulo": "Pedro Páramo",
+      "autor": "Juan Rulfo",
+      "genero": "novela",
+      "anio": 1955,
+      "disponibles": 3,
+      "totalEjemplares": 3,
+      "soloSala": false,
+      "descripcion": "Novela fundamental de la literatura mexicana."
+    },
+    {
+      "id": 9,
+      "titulo": "El túnel",
+      "autor": "Ernesto Sabato",
+      "genero": "novela",
+      "anio": 1948,
+      "disponibles": 0,
+      "totalEjemplares": 1,
+      "soloSala": false,
+      "descripcion": "Novela psicológica sobre la obsesión y el crimen."
+    },
+    {
+      "id": 10,
+      "titulo": "Don Quijote de la Mancha",
+      "autor": "Miguel de Cervantes",
+      "genero": "novela",
+      "anio": 1605,
+      "disponibles": 4,
+      "totalEjemplares": 4,
+      "soloSala": false,
+      "descripcion": "Obra cumbre de la literatura española."
+    }
+  ],
+  "prestamos": [
+    {
+      "id": 1,
+      "nroSocio": "1001",
+      "libroId": 2,
+      "fechaRetiro": "01/08/2026",
+      "fechaDevolucion": "15/08/2026",
+      "estado": "activo",
+      "fechaDevolucionReal": null
+    },
+    {
+      "id": 2,
+      "nroSocio": "1001",
+      "libroId": 3,
+      "fechaRetiro": "05/08/2026",
+      "fechaDevolucion": "19/08/2026",
+      "estado": "activo",
+      "fechaDevolucionReal": null
+    },
+    {
+      "id": 3,
+      "nroSocio": "1001",
+      "libroId": 7,
+      "fechaRetiro": "20/07/2026",
+      "fechaDevolucion": "03/08/2026",
+      "estado": "devuelto",
+      "fechaDevolucionReal": "02/08/2026"
+    },
+    {
+      "id": 4,
+      "nroSocio": "1001",
+      "libroId": 8,
+      "fechaRetiro": "10/07/2026",
+      "fechaDevolucion": "24/07/2026",
+      "estado": "devuelto",
+      "fechaDevolucionReal": "23/07/2026"
+    },
+    {
+      "id": 5,
+      "nroSocio": "1002",
+      "libroId": 1,
+      "fechaRetiro": "10/08/2026",
+      "fechaDevolucion": "24/08/2026",
+      "estado": "pendiente",
+      "fechaDevolucionReal": null
+    },
+    {
+      "id": 6,
+      "nroSocio": "1002",
+      "libroId": 4,
+      "fechaRetiro": "10/08/2026",
+      "fechaDevolucion": "24/08/2026",
+      "estado": "pendiente",
+      "fechaDevolucionReal": null
+    },
+    {
+      "id": 7,
+      "nroSocio": "1002",
+      "libroId": 10,
+      "fechaRetiro": "10/08/2026",
+      "fechaDevolucion": "24/08/2026",
+      "estado": "pendiente",
+      "fechaDevolucionReal": null
+    }
+  ],
+  "solicitudesPendientes": [
+    {
+      "id": 1,
+      "nroSocio": "1003",
+      "nombreSocio": "L. (menor)",
+      "libroId": 1,
+      "fechaSolicitud": "10/08/2026",
+      "estado": "pendiente"
+    },
+    {
+      "id": 2,
+      "nroSocio": "1001",
+      "nombreSocio": "Mariana García",
+      "libroId": 2,
+      "fechaSolicitud": "10/08/2026",
+      "estado": "pendiente"
+    },
+    {
+      "id": 3,
+      "nroSocio": "1002",
+      "nombreSocio": "Pablo Suárez",
+      "libroId": 4,
+      "fechaSolicitud": "10/08/2026",
+      "estado": "pendiente"
+    }
+  ],
+  "devolucionesHoy": [
+    {
+      "id": 1,
+      "nroSocio": "1001",
+      "nombreSocio": "Mariana García",
+      "libroId": 3,
+      "vencimiento": "10/08/2026",
+      "estado": "pendiente"
+    },
+    {
+      "id": 2,
+      "nroSocio": "1002",
+      "nombreSocio": "Pablo Suárez",
+      "libroId": 8,
+      "vencimiento": "10/08/2026",
+      "estado": "pendiente"
+    }
+  ],
+  "sociosMorosos": [
+    {
+      "id": 1,
+      "nroSocio": "1004",
+      "nombre": "Carla Méndez",
+      "libroId": 7,
+      "diasAtraso": 5,
+      "estado": "pendiente"
+    }
+  ]
+}

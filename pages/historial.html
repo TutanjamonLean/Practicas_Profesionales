@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BiblioTech - Mi historial</title>
     <link rel="stylesheet" href="../styles.css">
+    <script src="../js/scripts.js"></script>
 </head>
 <body>
     <header class="header-principal">
@@ -48,21 +49,8 @@
                         <th scope="col">Estado</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>Rayuela</td>
-                        <td>Julio Cortazar</td>
-                        <td>01/08/2026</td>
-                        <td>15/08/2026</td>
-                        <td><span class="etiqueta etiqueta-activo">Activo</span></td>
-                    </tr>
-                    <tr>
-                        <td>Cien anos de soledad</td>
-                        <td>Gabriel Garcia Marquez</td>
-                        <td>05/08/2026</td>
-                        <td>19/08/2026</td>
-                        <td><span class="etiqueta etiqueta-activo">Activo</span></td>
-                    </tr>
+                <tbody id="tbody-activos">
+                    <!-- Carga dinamica -->
                 </tbody>
             </table>
         </section>
@@ -79,26 +67,15 @@
                         <th scope="col">Estado</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>El aleph</td>
-                        <td>Jorge Luis Borges</td>
-                        <td>20/07/2026</td>
-                        <td><span class="etiqueta etiqueta-devuelto">Devuelto</span></td>
-                    </tr>
-                    <tr>
-                        <td>Pedro Paramo</td>
-                        <td>Juan Rulfo</td>
-                        <td>10/07/2026</td>
-                        <td><span class="etiqueta etiqueta-devuelto">Devuelto</span></td>
-                    </tr>
+                <tbody id="tbody-devueltos">
+                    <!-- Carga dinamica -->
                 </tbody>
             </table>
         </section>
 
         <section>
             <h3>Sanciones vigentes</h3>
-            <p>No tenes sanciones activas en este momento.</p>
+            <p id="mensaje-sanciones">No tenes sanciones activas en este momento.</p>
         </section>
 
         <aside>
@@ -108,6 +85,92 @@
             muestran a terceros.
         </aside>
     </main>
+
+    <script>
+        async function cargarHistorial() {
+            // Requerir autenticación como socio
+            if (!BiblioTech.requerirAuth('socio')) return;
+
+            const user = BiblioTech.obtenerUsuarioActual();
+            const datos = await BiblioTech.obtenerDatos();
+
+            // Combinar préstamos de datos.json y localStorage
+            const prestamosLS = JSON.parse(localStorage.getItem('biblio_prestamos') || '[]');
+            const todosPrestamos = [...datos.prestamos, ...prestamosLS];
+
+            // Filtrar por nroSocio del usuario logueado
+            const misPrestamos = todosPrestamos.filter(p => p.nroSocio === user.nroSocio);
+
+            const activos = misPrestamos.filter(p => p.estado === 'activo' || p.estado === 'pendiente');
+            const devueltos = misPrestamos.filter(p => p.estado === 'devuelto');
+
+            renderizarTabla(activos, 'tbody-activos', true);
+            renderizarTabla(devueltos, 'tbody-devueltos', false);
+
+            // Verificar sanciones (préstamos vencidos no devueltos)
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            const vencidos = activos.filter(p => {
+                const venc = BiblioTech.parsearFecha(p.fechaDevolucion);
+                return venc && venc < hoy;
+            });
+
+            if (vencidos.length > 0) {
+                document.getElementById('mensaje-sanciones').innerHTML = `
+                    <strong class="aviso aviso-error">Tienes ${vencidos.length} prestamo${vencidos.length > 1 ? 's' : ''} vencido${vencidos.length > 1 ? 's' : ''}:</strong>
+                    <ul>
+                        ${vencidos.map(p => `<li>${BiblioTech.obtenerTituloLibro(datos.libros, p.libroId)} - Vencido el ${p.fechaDevolucion}</li>`).join('')}
+                    </ul>
+                `;
+            }
+        }
+
+        function renderizarTabla(prestamos, tbodyId, esActivo) {
+            const tbody = document.getElementById(tbodyId);
+            tbody.innerHTML = '';
+
+            if (prestamos.length === 0) {
+                const cols = esActivo ? 5 : 4;
+                tbody.innerHTML = `<tr><td colspan="${cols}" style="text-align:center; padding:1rem; color:#666;">No hay prestamos ${esActivo ? 'activos' : 'devueltos'}.</td></tr>`;
+                return;
+            }
+
+            prestamos.forEach(p => {
+                const tr = document.createElement('tr');
+                const titulo = BiblioTech.obtenerTituloLibro(datos.libros, p.libroId);
+                const autor = BiblioTech.obtenerAutorLibro(datos.libros, p.libroId);
+
+                let estadoHtml = '';
+                if (esActivo) {
+                    const vencido = BiblioTech.estaVencido(p);
+                    estadoHtml = `<span class="etiqueta ${vencido ? 'etiqueta-moroso' : 'etiqueta-activo'}">${vencido ? 'Vencido' : 'Activo'}</span>`;
+                } else {
+                    estadoHtml = '<span class="etiqueta etiqueta-devuelto">Devuelto</span>';
+                }
+
+                if (esActivo) {
+                    tr.innerHTML = `
+                        <td>${titulo}</td>
+                        <td>${autor}</td>
+                        <td>${p.fechaRetiro}</td>
+                        <td>${p.fechaDevolucion}</td>
+                        <td>${estadoHtml}</td>
+                    `;
+                } else {
+                    tr.innerHTML = `
+                        <td>${titulo}</td>
+                        <td>${autor}</td>
+                        <td>${p.fechaDevolucionReal || p.fechaDevolucion}</td>
+                        <td>${estadoHtml}</td>
+                    `;
+                }
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Cargar historial al inicio
+        document.addEventListener('DOMContentLoaded', cargarHistorial);
+    </script>
 
     <footer class="footer-principal">
         <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;
