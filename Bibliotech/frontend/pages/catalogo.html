@@ -1,0 +1,176 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTech - Catalogo</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <script src="../js/scripts.js"></script>
+</head>
+<body>
+    <header class="header-principal">
+        <a href="/index.html" class="enlace-logo" aria-label="BiblioTech - Ir al inicio"><img src="../assets/img/logo-bibliotech.svg" alt="Logo BiblioTech" class="logo"></a>
+        <div>
+            <h1 class="titulo-sitio">BiblioTech</h1>
+            <p class="subtitulo-sitio">Biblioteca Provincial "Manuel Belgrano"</p>
+        </div>
+    </header>
+
+    <nav class="nav-principal" aria-label="Navegacion principal">
+        <a href="../index.html">Inicio</a>
+        <a href="login.html">Iniciar sesion</a>
+        <a href="catalogo.html">Catalogo</a>
+        <a href="historial.html">Mi historial</a>
+        <a href="panel-bibliotecario.html">Panel bibliotecario</a>
+        <a href="tablero-director.html">Tablero del director</a>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Catalogo de libros</h2>
+            <p>
+                Busca por titulo, autor o genero para encontrar el
+                material disponible en la biblioteca. La disponibilidad
+                se muestra en tiempo real para cada ejemplar.
+            </p>
+        </section>
+
+        <form id="form-buscar">
+            <fieldset>
+                <legend>Buscar libro</legend>
+                <label for="termino">Titulo, autor o genero</label>
+                <input type="search" id="termino" name="termino"
+                       placeholder="Ej: Borges, ciencia ficcion, ensayo...">
+
+                <label for="genero">Genero</label>
+                <select id="genero" name="genero">
+                    <option value="">Todos los generos</option>
+                    <option value="novela">Novela</option>
+                    <option value="ensayo">Ensayo</option>
+                    <option value="poesia">Poesia</option>
+                    <option value="ciencia">Ciencia</option>
+                    <option value="historia">Historia</option>
+                    <option value="infantil">Infantil</option>
+                    <option value="cuento">Cuento</option>
+                    <option value="novela corta">Novela corta</option>
+                    <option value="divulgacion cientifica">Divulgacion cientifica</option>
+                    <option value="coleccion unica">Coleccion unica</option>
+                </select>
+
+                <label for="disponible">Solo disponibles</label>
+                <input type="checkbox" id="disponible" name="disponible">
+            </fieldset>
+
+            <p>
+                <button type="submit" class="boton">Buscar</button>
+                <button type="reset" class="boton boton-secundario">Limpiar</button>
+            </p>
+        </form>
+
+        <section>
+            <h2>Resultados de la busqueda</h2>
+            <p id="resumen-resultados" aria-live="polite"></p>
+
+            <div class="catalogo" id="catalogo-libros">
+                <!-- Los libros se cargarán dinámicamente aquí -->
+            </div>
+        </section>
+
+        <aside>
+            <strong>Recordatorio:</strong> Como socio podes tener hasta
+            3 prestamos simultaneos. Si intentas reservar un cuarto
+            libro, el sistema mostrara un aviso en pantalla y no
+            completara la operacion.
+        </aside>
+    </main>
+
+    <script>
+        let librosActuales = [];
+        let usuarioActual = null;
+
+        async function cargarLibros() {
+            usuarioActual = await BiblioTech.requerirSesion();
+            if (!usuarioActual) return;
+
+            try {
+                const respuesta = await BiblioTech.api('/libros');
+                librosActuales = respuesta.libros;
+                renderizarLibros(librosActuales);
+            } catch (error) {
+                BiblioTech.mostrarAviso(error.message, 'error');
+            }
+        }
+
+        function renderizarLibros(libros) {
+            const contenedor = document.getElementById('catalogo-libros');
+            const resumen = document.getElementById('resumen-resultados');
+            contenedor.innerHTML = '';
+
+            resumen.textContent = `${libros.length} título${libros.length === 1 ? '' : 's'} encontrado${libros.length === 1 ? '' : 's'}.`;
+
+            if (libros.length === 0) {
+                contenedor.innerHTML = '<p class="aviso">No se encontraron libros que coincidan con la búsqueda.</p>';
+                return;
+            }
+
+            libros.forEach(libro => {
+                const article = document.createElement('article');
+                article.className = 'libro';
+
+                let etiquetaHtml = '';
+                if (libro.soloSala) {
+                    etiquetaHtml = '<p><span class="etiqueta etiqueta-sala">Solo consulta en sala</span></p>';
+                } else if (libro.disponibles > 0) {
+                    etiquetaHtml = `<p><span class="etiqueta etiqueta-activo">${libro.disponibles} disponible${libro.disponibles > 1 ? 's' : ''} de ${libro.totalEjemplares}</span></p>`;
+                } else {
+                    etiquetaHtml = '<p class="aviso aviso-error"><strong>Sin stock disponible.</strong> Te avisaremos cuando se devuelva un ejemplar.</p>';
+                }
+
+                article.innerHTML = `
+                    <h3>${BiblioTech.escaparHtml(libro.titulo)}</h3>
+                    <p class="meta">${BiblioTech.escaparHtml(libro.autor)} &middot; ${BiblioTech.escaparHtml(libro.genero)} &middot; ${BiblioTech.escaparHtml(libro.anio || '')}</p>
+                    <p>${BiblioTech.escaparHtml(libro.descripcion || '')}</p>
+                    ${etiquetaHtml}
+                    <p><a class="boton" href="/pages/libro.html?id=${libro.id}">Ver libro</a></p>
+                `;
+                contenedor.appendChild(article);
+            });
+        }
+
+        async function filtrarLibros() {
+            const termino = document.getElementById('termino').value.trim();
+            const genero = document.getElementById('genero').value;
+            const soloDisponibles = document.getElementById('disponible').checked;
+
+            const parametros = new URLSearchParams();
+            if (termino) parametros.set('buscar', termino);
+            if (genero) parametros.set('genero', genero);
+            if (soloDisponibles) parametros.set('disponible', '1');
+
+            try {
+                const respuesta = await BiblioTech.api(`/libros?${parametros.toString()}`);
+                librosActuales = respuesta.libros;
+                renderizarLibros(librosActuales);
+            } catch (error) {
+                BiblioTech.mostrarAviso(error.message, 'error');
+            }
+        }
+
+        document.getElementById('form-buscar').addEventListener('submit', (e) => {
+            e.preventDefault();
+            filtrarLibros();
+        });
+
+        document.getElementById('form-buscar').addEventListener('reset', () => {
+            setTimeout(() => renderizarLibros(librosActuales), 0);
+        });
+
+        document.addEventListener('DOMContentLoaded', cargarLibros);
+    </script>
+
+    <footer class="footer-principal">
+        <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;
+           Grupo 7 &middot; v<span data-version>2.0.0</span></p>
+    </footer>
+</body>
+</html>

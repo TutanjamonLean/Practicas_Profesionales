@@ -1,0 +1,169 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTech - Reservar libro</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <script src="../js/scripts.js"></script>
+</head>
+<body>
+    <header class="header-principal">
+        <a href="/index.html" class="enlace-logo" aria-label="BiblioTech - Ir al inicio"><img src="../assets/img/logo-bibliotech.svg" alt="Logo BiblioTech" class="logo"></a>
+        <div>
+            <h1 class="titulo-sitio">BiblioTech</h1>
+            <p class="subtitulo-sitio">Biblioteca Provincial "Manuel Belgrano"</p>
+        </div>
+    </header>
+
+    <nav class="nav-principal" aria-label="Navegacion principal">
+        <a href="../index.html">Inicio</a>
+        <a href="login.html">Iniciar sesion</a>
+        <a href="catalogo.html">Catalogo</a>
+        <a href="historial.html">Mi historial</a>
+        <a href="panel-bibliotecario.html">Panel bibliotecario</a>
+        <a href="tablero-director.html">Tablero del director</a>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Solicitar prestamo</h2>
+            <p>
+                Completa los datos para registrar tu solicitud de prestamo.
+                El sistema validara automaticamente que el libro este
+                disponible y que no supere tu cupo maximo de prestamos
+                simultaneos (3).
+            </p>
+        </section>
+
+        <form id="form-reserva">
+            <fieldset>
+                <legend>Libro a reservar</legend>
+
+                <label for="titulo">Titulo</label>
+                <input type="text" id="titulo" name="titulo" required readonly>
+
+                <label for="autor">Autor</label>
+                <input type="text" id="autor" name="autor" readonly>
+
+                <input type="hidden" id="libroId" name="libroId">
+            </fieldset>
+
+            <fieldset>
+                <legend>Datos del socio</legend>
+
+                <label for="socio">Nro. de socio</label>
+                <input type="text" id="socio" name="socio" readonly>
+
+                <label for="retiro">Fecha estimada de retiro</label>
+                <input type="date" id="retiro" name="retiro">
+            </fieldset>
+
+            <p>
+                <button type="submit" class="boton">Confirmar reserva</button>
+                <a class="boton boton-secundario" href="catalogo.html">Cancelar</a>
+            </p>
+        </form>
+
+        <aside class="aviso aviso-error" role="alert">
+            <strong>Aviso del sistema:</strong> Si ya tenes 3 prestamos
+            activos, esta operacion sera rechazada. Tambien se rechazara
+            si el ejemplar pertenece a una coleccion unica de uso solo
+            en sala.
+        </aside>
+    </main>
+
+    <script>
+        let libroSeleccionado = null;
+        let usuarioActual = null;
+        const formReserva = document.getElementById('form-reserva');
+
+        async function cargarLibroDesdeURL() {
+            usuarioActual = await BiblioTech.requerirSesion('socio');
+            if (!usuarioActual) return;
+
+            document.getElementById('socio').value = usuarioActual.nroSocio;
+
+            const params = new URLSearchParams(window.location.search);
+            const libroId = params.get('libro');
+
+            if (!libroId) {
+                BiblioTech.mostrarAviso('No se especificó un libro para reservar', 'error');
+                formReserva.style.display = 'none';
+                return;
+            }
+
+            try {
+                const respuesta = await BiblioTech.api(`/libros/${libroId}`);
+                libroSeleccionado = respuesta.libro;
+            } catch (error) {
+                BiblioTech.mostrarAviso(error.message, 'error');
+                formReserva.style.display = 'none';
+                return;
+            }
+
+            // Verificar disponibilidad
+            const boton = formReserva.querySelector('button[type="submit"]');
+            if (libroSeleccionado.soloSala) {
+                BiblioTech.mostrarAviso('Este libro es de consulta en sala únicamente, no se puede reservar', 'error');
+                boton.disabled = true;
+            } else if (libroSeleccionado.disponibles <= 0) {
+                BiblioTech.mostrarAviso('No hay ejemplares disponibles de este libro', 'error');
+                boton.disabled = true;
+            }
+
+            // Llenar formulario
+            document.getElementById('libroId').value = libroSeleccionado.id;
+            document.getElementById('titulo').value = libroSeleccionado.titulo;
+            document.getElementById('autor').value = libroSeleccionado.autor;
+
+            // Establecer fecha de hoy como mínima
+            const hoy = BiblioTech.hoyISO();
+            document.getElementById('retiro').min = hoy;
+            document.getElementById('retiro').value = hoy;
+        }
+
+        formReserva.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!libroSeleccionado || !usuarioActual) {
+                BiblioTech.mostrarAviso('Error: libro no cargado', 'error');
+                return;
+            }
+
+            const fechaRetiro = document.getElementById('retiro').value;
+            const boton = formReserva.querySelector('button[type="submit"]');
+
+            if (!BiblioTech.confirmarAccion(`¿Estás seguro de reservar "${libroSeleccionado.titulo}" para retirar el ${fechaRetiro}?`)) {
+                return;
+            }
+
+            boton.disabled = true;
+            boton.textContent = 'Registrando...';
+
+            try {
+                const respuesta = await BiblioTech.api('/solicitudes', {
+                    metodo: 'POST',
+                    cuerpo: {
+                        libroId: libroSeleccionado.id,
+                        fechaRetiro
+                    }
+                });
+
+                window.location.href = `/pages/confirmacion.html?solicitud=${respuesta.solicitud.id}`;
+            } catch (error) {
+                BiblioTech.mostrarAviso(error.message, 'error');
+                boton.disabled = false;
+                boton.textContent = 'Confirmar reserva';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', cargarLibroDesdeURL);
+    </script>
+
+    <footer class="footer-principal">
+        <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;
+           Grupo 7 &middot; v<span data-version>2.0.0</span></p>
+    </footer>
+</body>
+</html>

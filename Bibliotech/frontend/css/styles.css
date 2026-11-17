@@ -1,0 +1,617 @@
+/* ===========================================================
+   BiblioTech - Hoja de estilos base (Hito 02)
+   Reglas basicas: tipografias, colores, margenes, padding,
+   clases, selectores simples y Flexbox para layouts/navbars.
+   Sin responsive avanzado, sin animaciones.
+   =========================================================== */
+
+/* --- Reset basico --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #1a1a1a;
+    background-color: #f5f1e8;
+    line-height: 1.5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Tipografia --- */
+h1, h2, h3, h4 {
+    color: #0d2b44;
+    margin-bottom: 0.6rem;
+    line-height: 1.25;
+}
+
+h1 { font-size: 1.8rem; }
+h2 { font-size: 1.4rem; }
+h3 { font-size: 1.15rem; }
+
+p {
+    margin-bottom: 0.8rem;
+}
+
+a {
+    color: #0d2b44;
+    text-decoration: none;
+}
+
+a:hover,
+a:focus {
+    text-decoration: underline;
+}
+
+/* --- Header y barra de navegacion --- */
+.header-principal {
+    background-color: #0d2b44;
+    color: #ffffff;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.header-principal .logo {
+    width: 60px;
+    height: 60px;
+}
+
+.header-principal .titulo-sitio {
+    color: #ffffff;
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.header-principal .subtitulo-sitio {
+    color: #c9a227;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.nav-principal {
+    background-color: #091f33;
+    padding: 0.6rem 1.5rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.nav-principal a {
+    color: #ffffff;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+}
+
+.nav-principal a:hover,
+.nav-principal a:focus {
+    background-color: #c9a227;
+    color: #0d2b44;
+    text-decoration: none;
+}
+
+/* --- Main y secciones --- */
+main {
+    flex: 1;
+    padding: 1.5rem;
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+section {
+    margin-bottom: 1.5rem;
+}
+
+article {
+    background-color: #ffffff;
+    border: 1px solid #d9d4c4;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+aside {
+    background-color: #fff7d6;
+    border-left: 4px solid #c9a227;
+    padding: 0.8rem 1rem;
+    margin: 1rem 0;
+}
+
+/* --- Avisos / mensajes --- */
+.aviso {
+    background-color: #fff7d6;
+    border: 2px solid #c9a227;
+    padding: 0.8rem 1rem;
+    margin: 1rem 0;
+    border-radius: 4px;
+}
+
+.aviso-error {
+    background-color: #fde7e7;
+    border: 2px solid #b22b2b;
+    color: #6b1414;
+}
+
+.aviso-exito {
+    background-color: #e6f4ea;
+    border: 2px solid #2e7d32;
+    color: #1b4d1f;
+}
+
+.aviso-info {
+    background-color: #e3eaf3;
+    border: 2px solid #163d5c;
+    color: #163d5c;
+}
+
+/* --- Tarjetas de presentacion de roles --- */
+.tarjetas-roles {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.tarjeta-rol {
+    background-color: #ffffff;
+    border: 1px solid #d9d4c4;
+    border-radius: 6px;
+    padding: 1rem;
+    flex: 1 1 220px;
+}
+
+.tarjeta-rol h3 {
+    color: #0d2b44;
+    margin-bottom: 0.4rem;
+}
+
+.tarjeta-rol p {
+    font-size: 0.95rem;
+}
+
+/* --- Botones --- */
+.boton {
+    display: inline-block;
+    background-color: #0d2b44;
+    color: #ffffff;
+    padding: 0.6rem 1.1rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    text-align: center;
+}
+
+.boton:hover,
+.boton:focus {
+    background-color: #c9a227;
+    color: #0d2b44;
+    text-decoration: none;
+}
+
+.boton-secundario {
+    background-color: #ffffff;
+    color: #0d2b44;
+    border: 2px solid #0d2b44;
+}
+
+.boton-secundario:hover,
+.boton-secundario:focus {
+    background-color: #0d2b44;
+    color: #ffffff;
+}
+
+/* --- Formularios --- */
+form {
+    background-color: #ffffff;
+    border: 1px solid #d9d4c4;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+form label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-weight: bold;
+}
+
+form input[type="text"],
+form input[type="number"],
+form input[type="search"],
+form input[type="date"],
+form input[type="password"],
+form select,
+form textarea {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 0.8rem;
+    border: 1px solid #999999;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+form fieldset {
+    border: 1px solid #d9d4c4;
+    padding: 0.6rem 1rem;
+    margin-bottom: 0.8rem;
+    border-radius: 4px;
+}
+
+form legend {
+    font-weight: bold;
+    padding: 0 0.3rem;
+}
+
+/* --- Tablas --- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    margin-bottom: 1rem;
+}
+
+th, td {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #d9d4c4;
+    text-align: left;
+}
+
+th {
+    background-color: #0d2b44;
+    color: #ffffff;
+}
+
+tr:nth-child(even) td {
+    background-color: #f5f1e8;
+}
+
+/* --- Etiquetas pequenas --- */
+.etiqueta {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.etiqueta-activo   { background-color: #e6f4ea; color: #1b4d1f; }
+.etiqueta-devuelto { background-color: #e3eaf3; color: #163d5c; }
+.etiqueta-moroso   { background-color: #fde7e7; color: #6b1414; }
+.etiqueta-sala     { background-color: #fff7d6; color: #6b5310; }
+
+/* --- Catalogo: lista de libros --- */
+.catalogo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.libro {
+    background-color: #ffffff;
+    border: 1px solid #d9d4c4;
+    border-radius: 6px;
+    padding: 1rem;
+    flex: 1 1 240px;
+}
+
+.libro h3 {
+    margin-bottom: 0.3rem;
+}
+
+.libro .meta {
+    font-size: 0.9rem;
+    color: #555555;
+    margin-bottom: 0.6rem;
+}
+
+/* --- Footer --- */
+.footer-principal {
+    background-color: #0d2b44;
+    color: #ffffff;
+    padding: 1rem 1.5rem;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.footer-principal p {
+    margin: 0;
+}
+
+.footer-principal a {
+    color: #c9a227;
+}
+
+/* --- Utilitarios agregados (Hito 3) --- */
+.meta {
+    color: #555555;
+    font-size: 0.9rem;
+}
+
+.nav-principal a.activo {
+    background-color: #c9a227;
+    color: #0d2b44;
+    font-weight: bold;
+}
+
+.nav-usuario {
+    margin-left: auto;
+    color: #c9a227;
+    font-style: italic;
+    padding: 0.4rem 0.8rem;
+}
+
+.barra-acciones {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin: 0.8rem 0;
+}
+
+.acciones {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.acciones .boton {
+    font-size: 0.9rem;
+    padding: 0.45rem 0.8rem;
+}
+
+.celda-vacia {
+    text-align: center;
+    padding: 1rem;
+    color: #555555;
+}
+
+.notificacion {
+    border-left: 5px solid #b22b2b;
+}
+
+.notificacion .meta {
+    margin-bottom: 0.4rem;
+}
+
+/* --- Logo enlazado al inicio --- */
+.enlace-logo {
+    display: flex;
+    align-items: center;
+    border-radius: 6px;
+    text-decoration: none;
+}
+
+.enlace-logo:hover,
+.enlace-logo:focus {
+    text-decoration: none;
+}
+
+.enlace-logo:focus-visible {
+    outline: 3px solid #c9a227;
+    outline-offset: 4px;
+}
+
+/* --- Inicio: libros más pedidos --- */
+.catalogo-populares .libro-enlace {
+    display: flex;
+    flex-direction: column;
+    color: #1a1a1a;
+    text-decoration: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.catalogo-populares .libro-enlace:hover,
+.catalogo-populares .libro-enlace:focus {
+    border-color: #0d2b44;
+    box-shadow: 0 2px 8px rgba(13, 43, 68, 0.15);
+    text-decoration: none;
+}
+
+.catalogo-populares .libro-enlace p:last-child {
+    margin-top: auto;
+    margin-bottom: 0;
+}
+
+/* --- Inicio: datos de la cuenta --- */
+.datos-cuenta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    background-color: #ffffff;
+    border: 1px solid #d9d4c4;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.datos-cuenta div {
+    border-left: 3px solid #c9a227;
+    padding-left: 0.8rem;
+}
+
+.datos-cuenta dt {
+    color: #0d2b44;
+    font-size: 0.85rem;
+    font-weight: bold;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.datos-cuenta dd {
+    margin: 0;
+    font-size: 1rem;
+}
+
+/* --- Ficha del libro y reseñas --- */
+#ficha-libro th[scope="row"] {
+    width: 34%;
+    background-color: #f5f1e8;
+    color: #0d2b44;
+    border: 1px solid #d9d4c4;
+}
+
+.resenia {
+    background-color: #ffffff;
+    border: 1px solid #d9d4c4;
+    border-left: 5px solid #c9a227;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.resenia p {
+    margin-bottom: 0.4rem;
+}
+
+.resenia-propia {
+    background-color: #f3faf5;
+    border-left-color: #2e7d32;
+}
+
+.estrellas {
+    color: #a67c00;
+    letter-spacing: 0.08em;
+}
+
+#promedio-resenias {
+    font-size: 1.05rem;
+}
+
+#form-resenia-contenedor {
+    margin-top: 1.5rem;
+}
+
+/* --- Responsive (RNF-07) --- */
+@media (max-width: 1024px) {
+    main {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-principal {
+        padding: 0.8rem 1rem;
+    }
+
+    .header-principal .titulo-sitio {
+        font-size: 1.25rem;
+    }
+
+    .nav-principal {
+        padding: 0.5rem 0.8rem;
+        gap: 0.5rem;
+    }
+
+    .nav-principal a {
+        padding: 0.5rem 0.7rem;
+    }
+
+    .nav-usuario {
+        margin-left: 0;
+        width: 100%;
+        padding-left: 0.2rem;
+    }
+
+    main {
+        padding: 1rem;
+    }
+
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.2rem; }
+
+    /* Tablas anchas: permitir desplazamiento horizontal */
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .boton {
+        width: 100%;
+        margin-bottom: 0.4rem;
+    }
+
+    .acciones .boton {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    html {
+        font-size: 15px;
+    }
+
+    .header-principal {
+        gap: 0.6rem;
+    }
+
+    .header-principal .logo {
+        width: 44px;
+        height: 44px;
+    }
+
+    .tarjeta-rol,
+    .libro {
+        flex: 1 1 100%;
+    }
+
+    form {
+        padding: 0.8rem;
+    }
+}
+
+/* --- Impresión del reporte --- */
+@media print {
+    body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+    }
+
+    .header-principal,
+    .nav-principal,
+    .footer-principal,
+    aside,
+    .no-imprimir,
+    .aviso-dinamico {
+        display: none !important;
+    }
+
+    main {
+        max-width: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    table {
+        display: table;
+        overflow: visible;
+        white-space: normal;
+    }
+
+    th {
+        background-color: #eeeeee !important;
+        color: #000000 !important;
+    }
+
+    td {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+    }
+
+    body.modo-reporte main > section:not(#seccion-reporte) {
+        display: none !important;
+    }
+}
+

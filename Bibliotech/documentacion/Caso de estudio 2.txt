@@ -1,0 +1,58 @@
+Caso de Estudio: Sistema de Gestión de
+Biblioteca "BiblioTech"
+La Biblioteca Provincial "Manuel Belgrano" necesita una aplicación web llamada "BiblioTech"
+para automatizar la gestión de préstamos de libros, el control de inventario y la
+administración de socios. El objetivo principal es optimizar el acceso a la cultura por parte
+de los vecinos, permitiéndoles consultar la disponibilidad de material bibliográfico y reservar
+ejemplares de manera rápida y segura. El sistema se centrará en la autogestión del socio y
+operará en un entorno de red local dentro de la institución para modernizar sus procesos.
+Con la aplicación, un socio podrá solicitar el préstamo de un libro, indicando el título, el
+autor o el género de su preferencia. El sistema le mostrará los ejemplares disponibles en
+tiempo real y le permitirá confirmar la solicitud de reserva. Una vez confirmado, el sistema le
+mostrará en pantalla un comprobante digital con la fecha límite de devolución. El socio
+también podrá consultar su historial de lecturas, que incluirá libros devueltos, préstamos
+activos y la posibilidad de verificar si tiene sanciones vigentes por demoras.
+Dentro de la biblioteca, el bibliotecario encargado podrá ver en tiempo real todas las
+solicitudes de préstamo pendientes y los libros que deben ser devueltos en la fecha. Podrá
+aprobar la entrega del libro físico, registrar una devolución o dar de baja un ejemplar
+deteriorado, y enviar notificaciones visuales en el sistema a los socios morosos. El director
+de la biblioteca necesitará un tablero de control unificado que consolide el estado de todos
+los libros y la actividad de los socios, permitiendo ver de un vistazo qué categorías son las
+más leídas o qué libros faltan en el inventario. Esto elimina el proceso manual de revisar
+miles de fichas de cartón y planillas de papel borroneadas.
+Actualmente, los socios deben recorrer las estanterías manualmente para buscar un libro o
+preguntar en el mostrador si está disponible, lo que genera demoras en la atención y
+posibles errores en la ubicación de los textos. Por ello, se necesita un módulo que permita
+al socio gestionar sus búsquedas de manera digital. También se necesita la capacidad de
+generar un reporte de préstamos vencidos en tiempo real para el bibliotecario.
+El sistema "BiblioTech" deberá operar en un servidor web local desarrollado en Node.js. Es
+crucial que la aplicación tenga la capacidad de alertar mediante un aviso en pantalla cuando
+un socio intenta llevarse un cuarto libro, ya que la regla de negocio permite un máximo de 3
+préstamos simultáneos. El tiempo de respuesta del sistema para registrar un préstamo no
+debe superar los 3 segundos. La Biblioteca Provincial "Manuel Belgrano" necesita recibir
+diferentes versiones de la aplicación a lo largo del tiempo para evaluar la usabilidad con los
+voluntarios mayores.
+El bibliotecario también podrá conocer la disponibilidad total del catálogo en una lista
+unificada. El socio, por su parte, verá un aviso destacado si el libro buscado no tiene stock.
+El sistema "BiblioTech" deberá activar un proceso que validará automáticamente que no se
+presten libros restringidos (colecciones únicas) para llevar a domicilio, permitiendo su uso
+solo en sala de lectura.
+El entorno de operación presenta un desafío particular: gran parte de los voluntarios que
+atienden el mostrador son personas mayores con visión reducida. Por lo tanto, el sistema
+requerirá que la interfaz de administración posea botones de gran tamaño y un esquema de
+alto contraste para evitar errores operativos. Además, debido a normativas de protección al
+menor, el sistema no debe mostrar el apellido ni la dirección de los socios menores de edad
+en la pantalla principal de préstamos, protegiendo su privacidad ante terceros.
+El sistema requerirá que los usuarios presenten credenciales para iniciar sesión antes de
+acceder a cualquier funcionalidad. El sistema "BiblioTech" deberá gestionar la persistencia
+de datos mediante archivos de texto estructurados en formato JSON alojados en el mismo
+servidor, evitando la complejidad de motores de bases de datos externos. El sistema se
+comunicará con el cliente a través de una API REST para obtener los datos del catálogo y
+el estado de los préstamos.
+Además, la aplicación web debe ser compatible con los navegadores Chrome y Firefox en
+sus versiones de escritorio y móvil, dado que muchos socios consultarán el catálogo desde
+sus teléfonos. El sistema se implementará como una aplicación web que centralizará la
+lógica de negocio. El servidor debe ser capaz de procesar más de 50 solicitudes de consulta
+por minuto durante los horarios de visita escolar. El sistema tiene la responsabilidad de la
+lógica de negocio, como el cálculo de fechas de devolución, la gestión de cupos de
+préstamo y la validación de usuarios.

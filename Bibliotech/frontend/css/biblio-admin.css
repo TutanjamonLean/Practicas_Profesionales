@@ -1,0 +1,374 @@
+/* ===========================================================
+   BiblioTech - Estilos para panel de administración
+
+   Paleta verde petróleo y crema, pensada para mantener una
+   lectura cómoda y un buen contraste para los voluntarios
+   mayores que atienden el mostrador:
+   - colores suaves, sin negro ni amarillo fluorescente
+   - tipografía más grande
+   - botones amplios con bordes marcados
+   - acciones bien separadas
+
+   Esta hoja se ENCADENA a styles.css (no la reemplaza).
+   Las páginas de administración la cargan en segundo lugar.
+   =========================================================== */
+
+:root {
+    --admin-fondo: #f7f4ec;
+    --admin-superficie: #ffffff;
+    --admin-superficie-suave: #eef3f0;
+    --admin-texto: #1f3434;
+    --admin-texto-suave: #4d6461;
+    --admin-principal: #1f4e4a;
+    --admin-principal-oscuro: #163b38;
+    --admin-principal-claro: #2f6f68;
+    --admin-acento: #4f8b7f;
+    --admin-borde: #cfd8d3;
+    --admin-borde-fuerte: #9bb3ac;
+    --admin-error: #9b2c2c;
+    --admin-error-fondo: #fbeaea;
+    --admin-exito: #236145;
+    --admin-exito-fondo: #e5f3eb;
+}
+
+body {
+    background-color: var(--admin-fondo);
+    color: var(--admin-texto);
+    font-size: 1.15rem;
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4 {
+    color: var(--admin-principal);
+    font-size: 1.4em;
+}
+
+h1 { font-size: 2rem; }
+h2 { font-size: 1.6rem; }
+h3 { font-size: 1.3rem; }
+
+a {
+    color: var(--admin-principal);
+    text-decoration: underline;
+}
+
+/* --- Header y navegación --- */
+.header-principal {
+    background-color: var(--admin-principal);
+    color: #ffffff;
+    border-bottom: 4px solid var(--admin-acento);
+}
+
+.header-principal .titulo-sitio {
+    color: #ffffff;
+}
+
+.header-principal .subtitulo-sitio {
+    color: #d7e8e1;
+    font-weight: bold;
+}
+
+.nav-principal {
+    background-color: var(--admin-principal-oscuro);
+    border-top: 3px solid var(--admin-acento);
+    border-bottom: 3px solid var(--admin-acento);
+}
+
+.nav-principal a {
+    color: #f1f7f4;
+    font-size: 1.1rem;
+    padding: 0.6rem 1rem;
+    border: 2px solid transparent;
+}
+
+.nav-principal a:hover,
+.nav-principal a:focus {
+    background-color: var(--admin-acento);
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    text-decoration: none;
+}
+
+/* --- Main, secciones, artículos --- */
+main {
+    background-color: var(--admin-fondo);
+    color: var(--admin-texto);
+}
+
+article,
+aside {
+    background-color: var(--admin-superficie);
+    border: 3px solid var(--admin-borde);
+    color: var(--admin-texto);
+    padding: 1.2rem;
+    margin-bottom: 1.2rem;
+}
+
+aside {
+    border-left: 8px solid var(--admin-acento);
+}
+
+/* --- Avisos --- */
+.aviso {
+    background-color: var(--admin-superficie-suave);
+    border: 3px solid var(--admin-borde-fuerte);
+    color: var(--admin-texto);
+}
+
+.aviso-error {
+    background-color: var(--admin-error-fondo);
+    border-color: var(--admin-error);
+    color: var(--admin-error);
+    font-weight: bold;
+}
+
+.aviso-exito {
+    background-color: var(--admin-exito-fondo);
+    border-color: var(--admin-exito);
+    color: var(--admin-exito);
+    font-weight: bold;
+}
+
+.aviso-info {
+    background-color: #e8f0f5;
+    border-color: var(--admin-principal-claro);
+    color: var(--admin-principal);
+}
+
+/* --- Botones grandes (voluntarios mayores) --- */
+.boton,
+.boton-secundario {
+    background-color: var(--admin-principal-claro);
+    color: #ffffff;
+    border: 4px solid var(--admin-principal-oscuro);
+    font-size: 1.3rem;
+    font-weight: bold;
+    padding: 1rem 1.5rem;
+    margin: 0.4rem 0.4rem 0.4rem 0;
+    min-width: 180px;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+.boton:hover,
+.boton:focus {
+    background-color: var(--admin-principal);
+    color: #ffffff;
+    border-color: var(--admin-principal-oscuro);
+    text-decoration: none;
+}
+
+.boton-secundario {
+    background-color: var(--admin-superficie);
+    color: var(--admin-principal);
+    border-color: var(--admin-principal-claro);
+}
+
+.boton-secundario:hover,
+.boton-secundario:focus {
+    background-color: var(--admin-principal-claro);
+    color: #ffffff;
+    border-color: var(--admin-principal-oscuro);
+}
+
+.boton-peligro {
+    background-color: var(--admin-error);
+    color: #ffffff;
+    border-color: #6d1d1d;
+}
+
+.boton-peligro:hover,
+.boton-peligro:focus {
+    background-color: #7d2222;
+    color: #ffffff;
+    border-color: #4f1414;
+}
+
+/* --- Formularios --- */
+form {
+    background-color: var(--admin-superficie);
+    border: 3px solid var(--admin-borde);
+    color: var(--admin-texto);
+}
+
+form label {
+    color: var(--admin-texto);
+    font-size: 1.1rem;
+}
+
+form input[type="text"],
+form input[type="number"],
+form input[type="search"],
+form input[type="date"],
+form input[type="password"],
+form select,
+form textarea {
+    background-color: #ffffff;
+    color: var(--admin-texto);
+    border: 3px solid var(--admin-borde-fuerte);
+    font-size: 1.1rem;
+    padding: 0.7rem;
+}
+
+form fieldset {
+    border: 2px solid var(--admin-borde-fuerte);
+}
+
+form legend {
+    color: var(--admin-principal);
+    font-size: 1.1rem;
+}
+
+/* --- Tablas --- */
+table {
+    background-color: var(--admin-superficie);
+    color: var(--admin-texto);
+    border: 3px solid var(--admin-borde);
+}
+
+th {
+    background-color: var(--admin-principal);
+    color: #ffffff;
+    font-size: 1.1rem;
+    border: 2px solid var(--admin-principal-oscuro);
+}
+
+td {
+    border: 2px solid var(--admin-borde);
+    color: var(--admin-texto);
+}
+
+tr:nth-child(even) td {
+    background-color: var(--admin-superficie-suave);
+}
+
+/* --- Etiquetas --- */
+.etiqueta-activo   { background-color: var(--admin-exito-fondo); color: var(--admin-exito); border: 2px solid var(--admin-exito); }
+.etiqueta-devuelto { background-color: #e8f0f5; color: var(--admin-principal); border: 2px solid var(--admin-principal-claro); }
+.etiqueta-moroso   { background-color: var(--admin-error-fondo); color: var(--admin-error); border: 2px solid var(--admin-error); }
+.etiqueta-sala     { background-color: #f4ecd8; color: #6b5310; border: 2px solid #a88b3f; }
+
+/* --- Footer --- */
+.footer-principal {
+    background-color: var(--admin-principal);
+    color: #ffffff;
+    border-top: 4px solid var(--admin-acento);
+}
+
+.footer-principal a {
+    color: #ffffff;
+    font-weight: bold;
+}
+
+/* --- Ajustes agregados --- */
+.nav-principal a.activo {
+    background-color: var(--admin-acento);
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    font-weight: bold;
+}
+
+.nav-usuario {
+    color: #d7e8e1;
+    font-style: italic;
+}
+
+.meta {
+    color: var(--admin-texto-suave);
+}
+
+.celda-vacia {
+    color: var(--admin-texto-suave);
+}
+
+.acciones {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.acciones .boton {
+    font-size: 1.05rem;
+    padding: 0.7rem 1rem;
+    min-width: 150px;
+}
+
+.notificacion {
+    border-left: 8px solid var(--admin-acento);
+}
+
+/* --- Diálogo de edición --- */
+dialog {
+    border: 3px solid var(--admin-principal);
+    border-radius: 8px;
+    padding: 0;
+    max-width: 640px;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+    width: calc(100% - 2rem);
+    background-color: var(--admin-superficie);
+    color: var(--admin-texto);
+}
+
+dialog::backdrop {
+    background-color: rgba(22, 59, 56, 0.55);
+}
+
+dialog form {
+    border: 0;
+    margin: 0;
+    padding: 1.5rem;
+}
+
+dialog h3 {
+    margin-bottom: 1rem;
+}
+
+dialog input[type="checkbox"] {
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .boton,
+    .boton-secundario {
+        width: 100%;
+        margin-right: 0;
+    }
+
+    .acciones .boton {
+        min-width: 0;
+    }
+}
+
+@media print {
+    body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+    }
+
+    h1, h2, h3, h4,
+    th,
+    td,
+    .meta {
+        color: #000000 !important;
+    }
+
+    main,
+    table,
+    th,
+    td {
+        background-color: #ffffff !important;
+    }
+
+    th {
+        border: 1px solid #000000 !important;
+    }
+
+    td {
+        border: 1px solid #666666 !important;
+    }
+
+    tr:nth-child(even) td {
+        background-color: #f4f4f4 !important;
+    }
+}

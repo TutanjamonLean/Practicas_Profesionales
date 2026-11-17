@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTech - Ficha del libro</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <script src="../js/scripts.js"></script>
+</head>
+<body>
+    <header class="header-principal">
+        <a href="/index.html" class="enlace-logo" aria-label="BiblioTech - Ir al inicio"><img src="../assets/img/logo-bibliotech.svg" alt="Logo BiblioTech" class="logo"></a>
+        <div>
+            <h1 class="titulo-sitio">BiblioTech</h1>
+            <p class="subtitulo-sitio">Biblioteca Provincial "Manuel Belgrano"</p>
+        </div>
+    </header>
+
+    <nav class="nav-principal" aria-label="Navegación principal">
+        <a href="../index.html">Inicio</a>
+        <a href="catalogo.html">Catálogo</a>
+        <a href="historial.html">Mi historial</a>
+    </nav>
+
+    <main>
+        <section>
+            <h2 id="titulo-libro">Ficha del libro</h2>
+            <p id="meta-libro" class="meta"></p>
+        </section>
+
+        <section>
+            <h3>Información del libro</h3>
+            <table>
+                <caption>Datos registrados en el catálogo</caption>
+                <tbody id="ficha-libro">
+                    <!-- Carga dinámica -->
+                </tbody>
+            </table>
+            <div class="barra-acciones" id="acciones-libro">
+                <!-- Carga dinámica -->
+            </div>
+        </section>
+
+        <section id="seccion-resenias">
+            <h3>Reseñas de socios</h3>
+            <p id="promedio-resenias" class="meta" aria-live="polite"></p>
+            <div id="lista-resenias">
+                <!-- Carga dinámica -->
+            </div>
+
+            <div id="form-resenia-contenedor" hidden>
+                <h4 id="titulo-form-resenia">Dejá tu reseña</h4>
+                <form id="form-resenia">
+                    <fieldset>
+                        <legend>Tu opinión sobre este libro</legend>
+
+                        <label for="puntuacion">Puntuación</label>
+                        <select id="puntuacion" name="puntuacion" required>
+                            <option value="5">★★★★★ (5 estrellas)</option>
+                            <option value="4">★★★★☆ (4 estrellas)</option>
+                            <option value="3">★★★☆☆ (3 estrellas)</option>
+                            <option value="2">★★☆☆☆ (2 estrellas)</option>
+                            <option value="1">★☆☆☆☆ (1 estrella)</option>
+                        </select>
+
+                        <label for="comentario">Comentario</label>
+                        <textarea id="comentario" name="comentario" rows="4" maxlength="1000"
+                                  placeholder="Contá qué te pareció el libro..." required></textarea>
+                    </fieldset>
+
+                    <p>
+                        <button type="submit" class="boton" id="btn-guardar-resenia">Guardar reseña</button>
+                    </p>
+                </form>
+            </div>
+        </section>
+
+        <aside>
+            <strong>Recordatorio:</strong> las reseñas son públicas para el resto
+            de los socios. El sistema protege la identidad de los socios menores:
+            solo se muestra su nombre de pila.
+        </aside>
+    </main>
+
+    <script>
+        let usuarioActual = null;
+        let libroActual = null;
+
+        function libroIdDesdeURL() {
+            return new URLSearchParams(window.location.search).get('id');
+        }
+
+        function etiquetaEstado(libro) {
+            if (libro.soloSala) {
+                return '<span class="etiqueta etiqueta-sala">Solo consulta en sala</span>';
+            }
+            if (libro.disponibles > 0) {
+                return '<span class="etiqueta etiqueta-activo">Disponible para préstamo</span>';
+            }
+            return '<span class="etiqueta etiqueta-moroso">Sin stock disponible</span>';
+        }
+
+        function renderizarLibro() {
+            document.getElementById('titulo-libro').textContent = libroActual.titulo;
+            document.getElementById('meta-libro').textContent =
+                `${libroActual.autor} · ${libroActual.genero} · ${libroActual.anio || 'Año no registrado'}`;
+
+            document.getElementById('ficha-libro').innerHTML = `
+                <tr>
+                    <th scope="row">ID</th>
+                    <td>${BiblioTech.escaparHtml(libroActual.id)}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Título</th>
+                    <td>${BiblioTech.escaparHtml(libroActual.titulo)}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Autor</th>
+                    <td>${BiblioTech.escaparHtml(libroActual.autor)}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Género</th>
+                    <td>${BiblioTech.escaparHtml(libroActual.genero)}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Año</th>
+                    <td>${BiblioTech.escaparHtml(libroActual.anio || 'No registrado')}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Descripción</th>
+                    <td>${BiblioTech.escaparHtml(libroActual.descripcion || 'Sin descripción registrada.')}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Ejemplares totales</th>
+                    <td>${libroActual.totalEjemplares}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Ejemplares disponibles</th>
+                    <td>${libroActual.disponibles}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Estado</th>
+                    <td>${etiquetaEstado(libroActual)}</td>
+                </tr>
+            `;
+
+            const acciones = document.getElementById('acciones-libro');
+            acciones.innerHTML = '';
+
+            const volver = document.createElement('a');
+            volver.className = 'boton boton-secundario';
+            volver.href = '/pages/catalogo.html';
+            volver.textContent = 'Volver al catálogo';
+            acciones.appendChild(volver);
+
+            if (usuarioActual.rol !== 'socio') return;
+
+            if (libroActual.soloSala) {
+                const aviso = document.createElement('span');
+                aviso.className = 'meta';
+                aviso.textContent = 'Este ejemplar pertenece a una colección única y solo puede consultarse en sala.';
+                acciones.appendChild(aviso);
+            } else if (libroActual.disponibles > 0) {
+                const reservar = document.createElement('a');
+                reservar.className = 'boton';
+                reservar.href = `/pages/reserva.html?libro=${libroActual.id}`;
+                reservar.textContent = 'Reservar este libro';
+                acciones.appendChild(reservar);
+            } else {
+                const aviso = document.createElement('span');
+                aviso.className = 'meta';
+                aviso.textContent = 'No hay ejemplares disponibles en este momento.';
+                acciones.appendChild(aviso);
+            }
+        }
+
+        function renderizarResenias(respuesta) {
+            const lista = document.getElementById('lista-resenias');
+            const promedio = document.getElementById('promedio-resenias');
+            const contenedorForm = document.getElementById('form-resenia-contenedor');
+
+            if (!respuesta.resenias || respuesta.resenias.length === 0) {
+                lista.innerHTML = '<p class="aviso">Todavía no hay reseñas para este libro. ¡Podés ser el primero!</p>';
+                promedio.textContent = 'Sin reseñas por ahora.';
+            } else {
+                promedio.innerHTML = `
+                    <span class="estrellas">${'★'.repeat(Math.round(respuesta.promedio))}${'☆'.repeat(5 - Math.round(respuesta.promedio))}</span>
+                    ${BiblioTech.escaparHtml(respuesta.promedio)} de 5 · ${respuesta.total} reseña${respuesta.total === 1 ? '' : 's'}
+                `;
+
+                lista.innerHTML = respuesta.resenias.map((resenia) => {
+                    const estrellas = `${'★'.repeat(resenia.puntuacion)}${'☆'.repeat(5 - resenia.puntuacion)}`;
+                    return `
+                        <article class="resenia ${resenia.propia ? 'resenia-propia' : ''}">
+                            <p>
+                                <strong>${BiblioTech.escaparHtml(resenia.autor)}</strong>
+                                <span class="estrellas" aria-label="${resenia.puntuacion} de 5 estrellas">${estrellas}</span>
+                                ${resenia.propia ? '<span class="etiqueta etiqueta-activo">Tu reseña</span>' : ''}
+                            </p>
+                            <p>${BiblioTech.escaparHtml(resenia.comentario)}</p>
+                            <p class="meta">${BiblioTech.escaparHtml(resenia.fecha)}</p>
+                        </article>
+                    `;
+                }).join('');
+            }
+
+            if (usuarioActual.rol !== 'socio') {
+                contenedorForm.hidden = true;
+                return;
+            }
+
+            contenedorForm.hidden = false;
+            const propia = (respuesta.resenias || []).find((resenia) => resenia.propia);
+            const tituloForm = document.getElementById('titulo-form-resenia');
+            const boton = document.getElementById('btn-guardar-resenia');
+
+            if (propia) {
+                tituloForm.textContent = 'Editar tu reseña';
+                boton.textContent = 'Actualizar reseña';
+                document.getElementById('puntuacion').value = String(propia.puntuacion);
+                document.getElementById('comentario').value = propia.comentario;
+            } else {
+                tituloForm.textContent = 'Dejá tu reseña';
+                boton.textContent = 'Guardar reseña';
+                document.getElementById('puntuacion').value = '5';
+                document.getElementById('comentario').value = '';
+            }
+        }
+
+        async function cargarResenias() {
+            const respuesta = await BiblioTech.api(`/libros/${libroActual.id}/resenias`);
+            renderizarResenias(respuesta);
+        }
+
+        async function cargarLibro() {
+            usuarioActual = await BiblioTech.requerirSesion();
+            if (!usuarioActual) return;
+
+            const id = libroIdDesdeURL();
+            if (!id) {
+                BiblioTech.mostrarAviso('No se especificó un libro para mostrar.', 'error');
+                document.getElementById('seccion-resenias').hidden = true;
+                return;
+            }
+
+            try {
+                const [respuestaLibro, respuestaResenias] = await Promise.all([
+                    BiblioTech.api(`/libros/${id}`),
+                    BiblioTech.api(`/libros/${id}/resenias`)
+                ]);
+
+                libroActual = respuestaLibro.libro;
+                renderizarLibro();
+                renderizarResenias(respuestaResenias);
+            } catch (error) {
+                BiblioTech.mostrarAviso(error.message, 'error');
+                document.getElementById('seccion-resenias').hidden = true;
+            }
+        }
+
+        document.getElementById('form-resenia').addEventListener('submit', async (evento) => {
+            evento.preventDefault();
+
+            if (!libroActual) return;
+
+            const puntuacion = Number(document.getElementById('puntuacion').value);
+            const comentario = document.getElementById('comentario').value.trim();
+            const boton = document.getElementById('btn-guardar-resenia');
+            const textoOriginal = boton.textContent;
+
+            if (!comentario) {
+                BiblioTech.mostrarAviso('Escribí un comentario para tu reseña.', 'error');
+                return;
+            }
+
+            boton.disabled = true;
+            boton.textContent = 'Guardando...';
+
+            try {
+                await BiblioTech.api(`/libros/${libroActual.id}/resenias`, {
+                    metodo: 'POST',
+                    cuerpo: { puntuacion, comentario }
+                });
+                BiblioTech.mostrarAviso('Tu reseña se guardó correctamente.', 'exito');
+                await cargarResenias();
+            } catch (error) {
+                BiblioTech.mostrarAviso(error.message, 'error');
+                boton.textContent = textoOriginal;
+            } finally {
+                boton.disabled = false;
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', cargarLibro);
+    </script>
+
+    <footer class="footer-principal">
+        <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;
+           Grupo 7 &middot; v<span data-version>2.0.0</span></p>
+    </footer>
+</body>
+</html>

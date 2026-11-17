@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTech - Reserva confirmada</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <script src="../js/scripts.js"></script>
+</head>
+<body>
+    <header class="header-principal">
+        <a href="/index.html" class="enlace-logo" aria-label="BiblioTech - Ir al inicio"><img src="../assets/img/logo-bibliotech.svg" alt="Logo BiblioTech" class="logo"></a>
+        <div>
+            <h1 class="titulo-sitio">BiblioTech</h1>
+            <p class="subtitulo-sitio">Biblioteca Provincial "Manuel Belgrano"</p>
+        </div>
+    </header>
+
+    <nav class="nav-principal" aria-label="Navegacion principal">
+        <a href="../index.html">Inicio</a>
+        <a href="login.html">Iniciar sesion</a>
+        <a href="catalogo.html">Catalogo</a>
+        <a href="historial.html">Mi historial</a>
+        <a href="panel-bibliotecario.html">Panel bibliotecario</a>
+        <a href="tablero-director.html">Tablero del director</a>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Reserva confirmada</h2>
+            <div class="aviso aviso-exito" role="status" id="mensaje-exito">
+                <strong>Tu solicitud de prestamo fue registrada correctamente.</strong>
+            </div>
+        </section>
+
+        <article>
+            <h3>Comprobante digital</h3>
+
+            <table>
+                <caption>Detalle de la reserva</caption>
+                <tbody id="detalle-reserva">
+                    <!-- Se llena dinamicamente -->
+                </tbody>
+            </table>
+
+            <p>
+                Acerca este comprobante al mostrador de la biblioteca para
+                retirar el ejemplar. La entrega fisica sera aprobada por
+                el bibliotecario encargado.
+            </p>
+        </article>
+
+        <aside>
+            <strong>Proximo paso:</strong> Podes consultar esta reserva y
+            tus prestamos activos desde
+            <a href="historial.html">Mi historial</a>.
+        </aside>
+
+        <p class="no-imprimir">
+            <button type="button" class="boton" id="btn-imprimir-ticket">Imprimir ticket</button>
+            <a class="boton boton-secundario" href="historial.html">Ir a mi historial</a>
+            <a class="boton boton-secundario" href="catalogo.html">Volver al catalogo</a>
+        </p>
+    </main>
+
+    <script>
+        async function cargarConfirmacion() {
+            const usuario = await BiblioTech.requerirSesion('socio');
+            if (!usuario) return;
+
+            const params = new URLSearchParams(window.location.search);
+            const solicitudId = params.get('solicitud');
+
+            if (!solicitudId) {
+                BiblioTech.mostrarAviso('No se especificó una reserva para mostrar', 'error');
+                document.getElementById('detalle-reserva').innerHTML = '';
+                return;
+            }
+
+            try {
+                const respuesta = await BiblioTech.api(`/solicitudes/${solicitudId}`);
+                const solicitud = respuesta.solicitud;
+                const libro = solicitud.libro || {};
+
+                const estados = {
+                    pendiente: 'Reservado (pendiente de aprobación)',
+                    aprobada: 'Aprobado (retirar en el mostrador)',
+                    rechazada: 'Rechazado'
+                };
+
+                document.getElementById('detalle-reserva').innerHTML = `
+                    <tr>
+                        <th scope="row">N.º de ticket</th>
+                        <td>#${BiblioTech.escaparHtml(solicitud.id)}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Título</th>
+                        <td>${BiblioTech.escaparHtml(libro.titulo || 'Desconocido')}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Autor</th>
+                        <td>${BiblioTech.escaparHtml(libro.autor || 'Desconocido')}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Socio</th>
+                        <td>Nro. ${BiblioTech.escaparHtml(solicitud.nroSocio)}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Fecha de la solicitud</th>
+                        <td>${BiblioTech.escaparHtml(solicitud.fechaSolicitud)}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Fecha límite de devolución</th>
+                        <td>${BiblioTech.escaparHtml(solicitud.fechaDevolucion)}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Estado</th>
+                        <td><span class="etiqueta etiqueta-activo">${BiblioTech.escaparHtml(estados[solicitud.estado] || solicitud.estado)}</span></td>
+                    </tr>
+                `;
+            } catch (error) {
+                BiblioTech.mostrarAviso(error.message, 'error');
+                document.getElementById('detalle-reserva').innerHTML = '';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', cargarConfirmacion);
+        document.getElementById('btn-imprimir-ticket').addEventListener('click', () => window.print());
+    </script>
+
+    <footer class="footer-principal">
+        <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;
+           Grupo 7 &middot; v<span data-version>2.0.0</span></p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,180 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTech - Tablero del director</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/biblio-admin.css">
+    <script src="../js/scripts.js"></script>
+</head>
+<body>
+    <header class="header-principal">
+        <a href="/index.html" class="enlace-logo" aria-label="BiblioTech - Ir al inicio"><img src="../assets/img/logo-bibliotech.svg" alt="Logo BiblioTech" class="logo"></a>
+        <div>
+            <h1 class="titulo-sitio">BiblioTech</h1>
+            <p class="subtitulo-sitio">Biblioteca Provincial "Manuel Belgrano"</p>
+        </div>
+    </header>
+
+    <nav class="nav-principal" aria-label="Navegación principal">
+        <a href="../index.html">Inicio</a>
+        <a href="tablero-director.html">Tablero del director</a>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Tablero de control unificado</h2>
+            <p>
+                Vista consolidada del estado del catálogo y la actividad de
+                los socios. Permite detectar de un vistazo las categorías más
+                leídas, los préstamos activos y los títulos faltantes.
+            </p>
+            <div class="barra-acciones">
+                <button type="button" class="boton boton-secundario" id="btn-actualizar">Actualizar ahora</button>
+                <span class="meta" id="ultima-actualizacion" aria-live="polite"></span>
+            </div>
+        </section>
+
+        <section>
+            <h3>Indicadores generales</h3>
+            <table>
+                <caption>Resumen del día</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Indicador</th>
+                        <th scope="col">Valor</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-indicadores">
+                    <!-- Carga dinámica -->
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h3>Categorías más leídas</h3>
+            <table>
+                <caption>Ranking de préstamos por categoría (histórico)</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Categoría</th>
+                        <th scope="col">Préstamos</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-categorias">
+                    <!-- Carga dinámica -->
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h3>Títulos faltantes o con stock crítico</h3>
+            <table>
+                <caption>Libros agotados o con un solo ejemplar disponible</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Título</th>
+                        <th scope="col">Autor</th>
+                        <th scope="col">Stock actual</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-faltantes">
+                    <!-- Carga dinámica -->
+                </tbody>
+            </table>
+        </section>
+
+        <aside>
+            <strong>Datos en vivo:</strong> los indicadores se calculan en el
+            servidor a partir del catálogo, los préstamos y las solicitudes
+            registradas. No se usan datos del navegador.
+        </aside>
+    </main>
+
+    <script>
+        async function cargarTablero() {
+            const usuario = await BiblioTech.requerirSesion('director');
+            if (!usuario) return;
+
+            try {
+                const tablero = await BiblioTech.api('/dashboard');
+                renderizarIndicadores(tablero.indicadores);
+                renderizarCategorias(tablero.categorias);
+                renderizarFaltantes(tablero.faltantes);
+
+                document.getElementById('ultima-actualizacion').textContent =
+                    `Actualizado: ${new Date(tablero.generadoEn).toLocaleTimeString('es-AR')}`;
+            } catch (error) {
+                BiblioTech.mostrarAviso(error.message, 'error');
+            }
+        }
+
+        function renderizarIndicadores(indicadores) {
+            const tbody = document.getElementById('tbody-indicadores');
+
+            const filas = [
+                { label: 'Socios activos', valor: indicadores.sociosActivos },
+                { label: 'Socios con préstamos vigentes', valor: indicadores.sociosConPrestamos },
+                { label: 'Préstamos vigentes', valor: indicadores.prestamosVigentes },
+                { label: 'Préstamos vencidos', valor: indicadores.prestamosVencidos },
+                { label: 'Títulos en catálogo', valor: indicadores.titulosCatalogo },
+                { label: 'Ejemplares totales', valor: indicadores.ejemplaresTotales },
+                { label: 'Ejemplares en sala (uso interno)', valor: indicadores.ejemplaresEnSala },
+                { label: 'Ejemplares disponibles para préstamo', valor: indicadores.disponiblesPrestamo }
+            ];
+
+            tbody.innerHTML = filas.map((fila) => `
+                <tr>
+                    <td>${BiblioTech.escaparHtml(fila.label)}</td>
+                    <td>${fila.valor}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderizarCategorias(categorias) {
+            const tbody = document.getElementById('tbody-categorias');
+
+            if (!categorias || categorias.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="2" class="celda-vacia">No hay datos de préstamos para mostrar.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = categorias.map((categoria) => {
+                const genero = categoria.genero.charAt(0).toUpperCase() + categoria.genero.slice(1);
+                return `
+                    <tr>
+                        <td>${BiblioTech.escaparHtml(genero)}</td>
+                        <td>${categoria.prestamos}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderizarFaltantes(faltantes) {
+            const tbody = document.getElementById('tbody-faltantes');
+
+            if (!faltantes || faltantes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="celda-vacia">No hay títulos con stock crítico.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = faltantes.map((libro) => `
+                <tr>
+                    <td>${BiblioTech.escaparHtml(libro.titulo)}</td>
+                    <td>${BiblioTech.escaparHtml(libro.autor)}</td>
+                    <td>${libro.disponibles} de ${libro.totalEjemplares}</td>
+                </tr>
+            `).join('');
+        }
+
+        document.getElementById('btn-actualizar').addEventListener('click', cargarTablero);
+        document.addEventListener('DOMContentLoaded', cargarTablero);
+    </script>
+
+    <footer class="footer-principal">
+        <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;
+           Grupo 7 &middot; v<span data-version>2.0.0</span></p>
+    </footer>
+</body>
+</html>

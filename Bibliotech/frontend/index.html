@@ -1,0 +1,275 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTech - Inicio</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/scripts.js"></script>
+</head>
+<body>
+    <header class="header-principal">
+        <a href="/index.html" class="enlace-logo" aria-label="BiblioTech - Ir al inicio"><img src="assets/img/logo-bibliotech.svg" alt="Logo BiblioTech" class="logo"></a>
+        <div>
+            <h1 class="titulo-sitio">BiblioTech Papulince</h1>
+            <p class="subtitulo-sitio">Biblioteca Provincial "Manuel Belgrano"</p>
+        </div>
+    </header>
+
+    <nav class="nav-principal" aria-label="Navegacion principal">
+        <a href="index.html">Inicio</a>
+        <a href="pages/login.html">Iniciar sesion</a>
+        <a href="pages/catalogo.html">Catalogo</a>
+        <a href="pages/historial.html">Mi historial</a>
+        <a href="pages/panel-bibliotecario.html">Panel bibliotecario</a>
+        <a href="pages/tablero-director.html">Tablero del director</a>
+    </nav>
+
+    <main>
+        <section id="bienvenida">
+            <h2>Sistema de gestión de biblioteca</h2>
+            <p>
+                BiblioTech es la plataforma web de la Biblioteca Provincial
+                "Manuel Belgrano" para la gestión de préstamos de libros,
+                el control de inventario y la administración de socios.
+                Su objetivo es acercar la cultura a los vecinos: permite
+                consultar la disponibilidad del material bibliográfico,
+                reservar ejemplares y conocer las lecturas más elegidas
+                por la comunidad.
+            </p>
+        </section>
+
+        <section id="mas-leidos">
+            <h2>Libros más pedidos</h2>
+            <p>
+                Una muestra de los títulos que más solicitan nuestros
+                lectores. Tocá un libro para ver su ficha completa; si
+                todavía no iniciaste sesión, te vamos a pedir que lo hagas.
+            </p>
+            <div class="catalogo catalogo-populares" id="lista-populares" aria-live="polite">
+                <!-- Se carga dinámicamente -->
+            </div>
+        </section>
+
+        <section id="datos-cuenta" hidden>
+            <h2>Datos de tu cuenta</h2>
+            <dl class="datos-cuenta">
+                <div>
+                    <dt>Nombre y apellido</dt>
+                    <dd id="cuenta-nombre">—</dd>
+                </div>
+                <div>
+                    <dt>N° de socio / legajo</dt>
+                    <dd id="cuenta-identificacion">—</dd>
+                </div>
+                <div>
+                    <dt>Correo electrónico</dt>
+                    <dd id="cuenta-email">—</dd>
+                </div>
+                <div id="fila-direccion">
+                    <dt>Dirección</dt>
+                    <dd id="cuenta-direccion">—</dd>
+                </div>
+                <div>
+                    <dt>Rol</dt>
+                    <dd id="cuenta-rol">—</dd>
+                </div>
+            </dl>
+            <p>
+                <a class="boton" href="/pages/catalogo.html">Ir al catálogo</a>
+                <a class="boton boton-secundario" href="/pages/historial.html" id="enlace-historial-cuenta" hidden>Ver mi historial</a>
+            </p>
+        </section>
+
+        <section id="acceso-roles">
+            <h2>Acceso segun tu rol</h2>
+            <div class="tarjetas-roles">
+                <article class="tarjeta-rol" data-rol="socio">
+                    <h3>Socio</h3>
+                    <p>
+                        Busca libros en el catalogo, solicita prestamos,
+                        consulta tu historial de lecturas y revisa si tenes
+                        sanciones vigentes.
+                    </p>
+                    <p><a class="boton" href="pages/catalogo.html">Entrar al catalogo</a></p>
+                </article>
+
+                <article class="tarjeta-rol" data-rol="bibliotecario">
+                    <h3>Bibliotecario</h3>
+                    <p>
+                        Atiende el mostrador: aprueba entregas, registra
+                        devoluciones, ajusta la cantidad de ejemplares y notifica a
+                        socios morosos. Interfaz con botones grandes y
+                        alto contraste.
+                    </p>
+                    <p><a class="boton" href="pages/panel-bibliotecario.html">Ir al panel</a></p>
+                </article>
+
+                <article class="tarjeta-rol" data-rol="director">
+                    <h3>Director</h3>
+                    <p>
+                        Consulta el tablero de control unificado con el
+                        estado del catalogo, la actividad de los socios y
+                        los titulos faltantes de inventario.
+                    </p>
+                    <p><a class="boton" href="pages/tablero-director.html">Ver tablero</a></p>
+                </article>
+            </div>
+        </section>
+
+        <aside id="aviso-visitante">
+            <strong>Aviso:</strong> Para acceder a las funcionalidades
+            protegidas (prestamo, historial, panel de administracion) es
+            necesario iniciar sesion con credenciales de socio o personal
+            de la biblioteca.
+            <p><a class="boton boton-secundario" href="pages/login.html">Iniciar sesion</a></p>
+        </aside>
+
+        <aside id="aviso-usuario" style="display:none; background-color:#e6f4ea; border-left-color:#2e7d32;">
+            <!-- Se llena dinamicamente -->
+        </aside>
+    </main>
+
+    <script>
+        const TEXTO_BIENVENIDA = `BiblioTech es la plataforma web de la Biblioteca Provincial "Manuel Belgrano" para la gestión de préstamos de libros, el control de inventario y la administración de socios. Su objetivo es acercar la cultura a los vecinos: permite consultar la disponibilidad del material bibliográfico, reservar ejemplares y conocer las lecturas más elegidas por la comunidad.`;
+
+        let usuarioActual = null;
+
+        async function cargarPopulares() {
+            const contenedor = document.getElementById('lista-populares');
+            if (!contenedor) return;
+
+            try {
+                const respuesta = await BiblioTech.api('/libros/populares');
+
+                if (!respuesta.libros || respuesta.libros.length === 0) {
+                    contenedor.innerHTML = '<p class="aviso">Todavía no hay datos suficientes para mostrar los libros más pedidos.</p>';
+                    return;
+                }
+
+                contenedor.innerHTML = '';
+
+                respuesta.libros.forEach((libro) => {
+                    const enlace = document.createElement('a');
+                    enlace.className = 'libro libro-enlace';
+                    enlace.href = usuarioActual
+                        ? `/pages/libro.html?id=${libro.id}`
+                        : `/pages/login.html?volver=${encodeURIComponent(`/pages/libro.html?id=${libro.id}`)}`;
+
+                    if (!usuarioActual) {
+                        enlace.title = 'Iniciá sesión para ver la ficha completa';
+                    }
+
+                    const pedidos = libro.vecesPrestado + libro.vecesSolicitado;
+                    enlace.innerHTML = `
+                        <h3>${BiblioTech.escaparHtml(libro.titulo)}</h3>
+                        <p class="meta">${BiblioTech.escaparHtml(libro.autor)} &middot; ${BiblioTech.escaparHtml(libro.genero)} &middot; ${BiblioTech.escaparHtml(libro.anio || '')}</p>
+                        <p>${BiblioTech.escaparHtml(libro.descripcion || 'Sin descripción disponible.')}</p>
+                        <p class="meta">${pedidos} ${pedidos === 1 ? 'pedido' : 'pedidos'} de nuestros lectores</p>
+                        <p><span class="boton boton-secundario">${usuarioActual ? 'Ver ficha' : 'Ver libro'}</span></p>
+                    `;
+
+                    contenedor.appendChild(enlace);
+                });
+            } catch (error) {
+                contenedor.innerHTML = '<p class="aviso">No se pudieron cargar los libros más pedidos en este momento.</p>';
+            }
+        }
+
+        function mostrarDatosCuenta(user) {
+            const panel = document.getElementById('datos-cuenta');
+            if (!panel) return;
+
+            if (!user) {
+                panel.hidden = true;
+                return;
+            }
+
+            panel.hidden = false;
+            document.getElementById('cuenta-nombre').textContent =
+                user.nombreCompleto || `${user.nombre || ''} ${user.apellido || ''}`.trim();
+            document.getElementById('cuenta-identificacion').textContent =
+                user.nroSocio || user.legajo || '—';
+            document.getElementById('cuenta-email').textContent = user.email || '—';
+            document.getElementById('cuenta-rol').textContent = user.rol || '—';
+
+            const filaDireccion = document.getElementById('fila-direccion');
+            filaDireccion.hidden = !user.direccion;
+            document.getElementById('cuenta-direccion').textContent = user.direccion || '—';
+
+            const enlaceHistorial = document.getElementById('enlace-historial-cuenta');
+            enlaceHistorial.hidden = user.rol !== 'socio';
+        }
+
+        async function actualizarInicio() {
+            const user = await BiblioTech.obtenerSesion();
+            usuarioActual = user;
+            const bienvenida = document.getElementById('bienvenida');
+            const avisoVisitante = document.getElementById('aviso-visitante');
+            const avisoUsuario = document.getElementById('aviso-usuario');
+
+            if (user) {
+                // Usuario logueado: mostrar bienvenida personalizada
+                bienvenida.querySelector('h2').textContent = `Bienvenido, ${user.nombre}`;
+                bienvenida.querySelector('p').textContent = TEXTO_BIENVENIDA;
+
+                // Ocultar tarjetas de roles que no corresponden
+                document.querySelectorAll('.tarjeta-rol').forEach(tarjeta => {
+                    tarjeta.style.display = tarjeta.dataset.rol === user.rol ? '' : 'none';
+                });
+
+                avisoVisitante.style.display = 'none';
+
+                // Mostrar aviso personalizado según rol
+                const mensajes = {
+                    socio: {
+                        texto: 'Como socio, podés buscar libros, reservar ejemplares y consultar tu historial.',
+                        enlace: '/pages/catalogo.html',
+                        boton: 'Ir al catálogo'
+                    },
+                    bibliotecario: {
+                        texto: 'Como bibliotecario, podés gestionar préstamos, devoluciones y notificaciones.',
+                        enlace: '/pages/panel-bibliotecario.html',
+                        boton: 'Ir al panel de bibliotecario'
+                    },
+                    director: {
+                        texto: 'Como director, podés ver el tablero de control con estadísticas del sistema.',
+                        enlace: '/pages/tablero-director.html',
+                        boton: 'Ver tablero del director'
+                    }
+                };
+
+                const mensaje = mensajes[user.rol];
+                if (mensaje) {
+                    avisoUsuario.innerHTML = `
+                        <strong>Sesión activa:</strong> ${BiblioTech.escaparHtml(mensaje.texto)}
+                        <p><a class="boton" href="${mensaje.enlace}">${mensaje.boton}</a></p>
+                    `;
+                    avisoUsuario.style.display = 'block';
+                }
+            } else {
+                // Visitante: mostrar vista por defecto
+                bienvenida.querySelector('h2').textContent = 'Sistema de gestión de biblioteca';
+                bienvenida.querySelector('p').textContent = TEXTO_BIENVENIDA;
+
+                document.querySelectorAll('.tarjeta-rol').forEach(tarjeta => {
+                    tarjeta.style.display = '';
+                });
+
+                avisoVisitante.style.display = 'block';
+                avisoUsuario.style.display = 'none';
+            }
+
+            mostrarDatosCuenta(user);
+            await cargarPopulares();
+        }
+
+        document.addEventListener('DOMContentLoaded', actualizarInicio);
+    </script>
+
+    <footer class="footer-principal">
+        <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;
+           Grupo 7 &middot; v<span data-version>2.0.0</span></p>
+    </footer>
+</body>
+</html>

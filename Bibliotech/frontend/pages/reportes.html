@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTech - Reportes</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/biblio-admin.css">
+    <script src="../js/scripts.js"></script>
+</head>
+<body>
+    <header class="header-principal">
+        <a href="/index.html" class="enlace-logo" aria-label="BiblioTech - Ir al inicio"><img src="../assets/img/logo-bibliotech.svg" alt="Logo BiblioTech" class="logo"></a>
+        <div>
+            <h1 class="titulo-sitio">BiblioTech - Administración</h1>
+            <p class="subtitulo-sitio">Biblioteca Provincial "Manuel Belgrano"</p>
+        </div>
+    </header>
+
+    <nav class="nav-principal" aria-label="Navegación principal">
+        <a href="../index.html">Inicio</a>
+        <a href="panel-bibliotecario.html">Panel bibliotecario</a>
+        <a href="reportes.html">Reportes</a>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Reportes</h2>
+            <p>
+                Reporte en tiempo real de los socios con préstamos vencidos
+                y del detalle de cada préstamo pendiente de devolución.
+                Los datos se calculan en el servidor al momento de consultar.
+            </p>
+            <div class="barra-acciones no-imprimir">
+                <button type="button" class="boton boton-secundario" id="btn-actualizar-reportes">Actualizar ahora</button>
+                <button type="button" class="boton" id="btn-imprimir-reportes">Imprimir reporte</button>
+                <span class="meta" id="ultima-actualizacion" aria-live="polite"></span>
+            </div>
+        </section>
+
+        <section id="seccion-reporte">
+            <h3>Socios morosos y préstamos vencidos</h3>
+            <p id="resumen-reportes" class="meta" aria-live="polite"></p>
+
+            <h4>Socios morosos</h4>
+            <table>
+                <caption>Socios con al menos un préstamo vencido a la fecha</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Socio</th>
+                        <th scope="col">Préstamos vencidos</th>
+                        <th scope="col">Días máx. de atraso</th>
+                        <th scope="col">Títulos</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-morosos">
+                    <!-- Carga dinámica -->
+                </tbody>
+            </table>
+
+            <h4>Préstamos vencidos</h4>
+            <table>
+                <caption>Detalle de cada préstamo vencido</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Socio</th>
+                        <th scope="col">Título</th>
+                        <th scope="col">Vencimiento</th>
+                        <th scope="col">Días de atraso</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-vencidos">
+                    <!-- Carga dinámica -->
+                </tbody>
+            </table>
+        </section>
+
+        <aside>
+            <strong>Privacidad:</strong> los socios menores de edad se muestran
+            solo con su nombre de pila. El apellido y la dirección nunca se
+            envían a esta pantalla; la protección se aplica en el servidor.
+        </aside>
+    </main>
+
+    <script>
+        async function cargarReportes() {
+            const usuario = await BiblioTech.requerirSesion('bibliotecario');
+            if (!usuario) return;
+
+            const boton = document.getElementById('btn-actualizar-reportes');
+            boton.disabled = true;
+
+            try {
+                const respuesta = await BiblioTech.api('/reportes/morosos');
+
+                renderizarMorosos(respuesta.socios);
+                renderizarVencidos(respuesta.vencidos);
+
+                document.getElementById('resumen-reportes').textContent =
+                    `${respuesta.totalSocios} socio${respuesta.totalSocios === 1 ? '' : 's'} moroso${respuesta.totalSocios === 1 ? '' : 's'} · ` +
+                    `${respuesta.totalPrestamos} préstamo${respuesta.totalPrestamos === 1 ? '' : 's'} vencido${respuesta.totalPrestamos === 1 ? '' : 's'} · ` +
+                    `Generado el ${new Date(respuesta.generadoEn).toLocaleString('es-AR')}`;
+
+                document.getElementById('ultima-actualizacion').textContent =
+                    `Actualizado: ${new Date().toLocaleTimeString('es-AR')}`;
+            } catch (error) {
+                BiblioTech.mostrarAviso(error.message, 'error');
+            } finally {
+                boton.disabled = false;
+            }
+        }
+
+        function renderizarMorosos(socios) {
+            const tbody = document.getElementById('tbody-morosos');
+            tbody.innerHTML = '';
+
+            if (!socios || socios.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="celda-vacia">No hay socios morosos.</td></tr>';
+                return;
+            }
+
+            socios.forEach((socio) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${BiblioTech.escaparHtml(socio.nombreVisible)}</td>
+                    <td>${socio.prestamosVencidos}</td>
+                    <td>${socio.diasAtrasoMaximo}</td>
+                    <td>${BiblioTech.escaparHtml(socio.titulos.join(', '))}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderizarVencidos(prestamos) {
+            const tbody = document.getElementById('tbody-vencidos');
+            tbody.innerHTML = '';
+
+            if (!prestamos || prestamos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="celda-vacia">No hay préstamos vencidos.</td></tr>';
+                return;
+            }
+
+            prestamos.forEach((prestamo) => {
+                const libro = prestamo.libro || {};
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${BiblioTech.escaparHtml(prestamo.nombreVisible)}</td>
+                    <td>${BiblioTech.escaparHtml(libro.titulo || 'Desconocido')}</td>
+                    <td>${BiblioTech.escaparHtml(prestamo.fechaDevolucion)}</td>
+                    <td>${prestamo.diasAtraso}</td>
+                    <td class="acciones no-imprimir">
+                        <button type="button" class="boton" data-accion="notificar"
+                                data-socio="${BiblioTech.escaparHtml(prestamo.nroSocio)}"
+                                data-libro="${BiblioTech.escaparHtml(libro.id || '')}"
+                                data-titulo="${BiblioTech.escaparHtml(libro.titulo || '')}">Enviar notificación</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function notificarMoroso(boton) {
+            const { socio, libro, titulo } = boton.dataset;
+
+            if (!BiblioTech.confirmarAccion(`¿Estás seguro de enviar una notificación al socio por "${titulo}"?`)) {
+                return;
+            }
+
+            boton.disabled = true;
+
+            try {
+                await BiblioTech.api('/notificaciones', {
+                    metodo: 'POST',
+                    cuerpo: {
+                        nroSocio: socio,
+                        libroId: libro || null,
+                        motivo: `Préstamo vencido: ${titulo}. Regularizá tu situación en el mostrador.`
+                    }
+                });
+                BiblioTech.mostrarAviso('Notificación enviada al socio.', 'exito');
+            } catch (error) {
+                BiblioTech.mostrarAviso(error.message, 'error');
+            } finally {
+                boton.disabled = false;
+            }
+        }
+
+        function imprimirReporte() {
+            document.body.classList.add('modo-reporte');
+            window.print();
+            setTimeout(() => document.body.classList.remove('modo-reporte'), 800);
+        }
+
+        document.addEventListener('click', (evento) => {
+            const boton = evento.target.closest('button[data-accion="notificar"]');
+            if (boton) notificarMoroso(boton);
+        });
+
+        document.getElementById('btn-actualizar-reportes').addEventListener('click', cargarReportes);
+        document.getElementById('btn-imprimir-reportes').addEventListener('click', imprimirReporte);
+
+        document.addEventListener('DOMContentLoaded', cargarReportes);
+    </script>
+
+    <footer class="footer-principal">
+        <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;
+           Grupo 7 &middot; v<span data-version>2.0.0</span></p>
+    </footer>
+</body>
+</html>

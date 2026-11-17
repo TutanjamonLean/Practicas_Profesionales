@@ -1,0 +1,288 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTech - Mi historial</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <script src="../js/scripts.js"></script>
+</head>
+<body>
+    <header class="header-principal">
+        <a href="/index.html" class="enlace-logo" aria-label="BiblioTech - Ir al inicio"><img src="../assets/img/logo-bibliotech.svg" alt="Logo BiblioTech" class="logo"></a>
+        <div>
+            <h1 class="titulo-sitio">BiblioTech</h1>
+            <p class="subtitulo-sitio">Biblioteca Provincial "Manuel Belgrano"</p>
+        </div>
+    </header>
+
+    <nav class="nav-principal" aria-label="Navegacion principal">
+        <a href="../index.html">Inicio</a>
+        <a href="login.html">Iniciar sesion</a>
+        <a href="catalogo.html">Catalogo</a>
+        <a href="historial.html">Mi historial</a>
+        <a href="panel-bibliotecario.html">Panel bibliotecario</a>
+        <a href="tablero-director.html">Tablero del director</a>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Mi historial de lecturas</h2>
+            <p>
+                Vista consolidada de tus prestamos: libros devueltos,
+                prestamos activos y sanciones vigentes. Si tenes un
+                prestamo proximo a vencer, el sistema lo marcara
+                automaticamente.
+            </p>
+        </section>
+
+        <section>
+            <h3>Mis reservas</h3>
+            <table>
+                <caption>Solicitudes registradas y comprobantes disponibles</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Ticket</th>
+                        <th scope="col">Titulo</th>
+                        <th scope="col">Solicitado</th>
+                        <th scope="col">Retiro</th>
+                        <th scope="col">Devolucion</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col">Accion</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-reservas">
+                    <!-- Carga dinamica -->
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h3>Prestamos activos</h3>
+            <table>
+                <caption>Listado de prestamos vigentes</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Titulo</th>
+                        <th scope="col">Autor</th>
+                        <th scope="col">Retirado</th>
+                        <th scope="col">Devolucion</th>
+                        <th scope="col">Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-activos">
+                    <!-- Carga dinamica -->
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h3>Libros devueltos</h3>
+            <table>
+                <caption>Historial de devoluciones</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Titulo</th>
+                        <th scope="col">Autor</th>
+                        <th scope="col">Devuelto el</th>
+                        <th scope="col">Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-devueltos">
+                    <!-- Carga dinamica -->
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h3>Sanciones vigentes</h3>
+            <p id="mensaje-sanciones">No tenes sanciones activas en este momento.</p>
+        </section>
+
+        <section id="seccion-notificaciones">
+            <h3>Notificaciones de la biblioteca</h3>
+            <div id="lista-notificaciones" aria-live="polite">
+                <!-- Carga dinamica -->
+            </div>
+        </section>
+
+        <aside>
+            <strong>Privacidad:</strong> Por normativa de proteccion al
+            menor, los socios menores de edad aparecen en esta pantalla
+            solo por su nombre de pila; el apellido y la direccion no se
+            muestran a terceros.
+        </aside>
+    </main>
+
+    <script>
+        async function cargarHistorial() {
+            const usuario = await BiblioTech.requerirSesion('socio');
+            if (!usuario) return;
+
+            try {
+                const [respuesta, reservas] = await Promise.all([
+                    BiblioTech.api('/prestamos/mios'),
+                    BiblioTech.api('/solicitudes/mias')
+                ]);
+
+                renderizarTabla(respuesta.activos, 'tbody-activos', true);
+                renderizarTabla(respuesta.devueltos, 'tbody-devueltos', false);
+                renderizarReservas(reservas.solicitudes);
+                renderizarSanciones(respuesta.sanciones);
+            } catch (error) {
+                BiblioTech.mostrarAviso(error.message, 'error');
+            }
+
+            cargarNotificaciones();
+        }
+
+        function renderizarTabla(prestamos, tbodyId, esActivo) {
+            const tbody = document.getElementById(tbodyId);
+            tbody.innerHTML = '';
+
+            if (prestamos.length === 0) {
+                const columnas = esActivo ? 5 : 4;
+                tbody.innerHTML = `<tr><td colspan="${columnas}" class="celda-vacia">No hay préstamos ${esActivo ? 'activos' : 'devueltos'}.</td></tr>`;
+                return;
+            }
+
+            prestamos.forEach((prestamo) => {
+                const tr = document.createElement('tr');
+                const libro = prestamo.libro || {};
+
+                if (esActivo) {
+                    const estadoHtml = `<span class="etiqueta ${prestamo.vencido ? 'etiqueta-moroso' : 'etiqueta-activo'}">${prestamo.vencido ? 'Vencido' : 'Activo'}</span>`;
+                    tr.innerHTML = `
+                        <td>${BiblioTech.escaparHtml(libro.titulo || 'Desconocido')}</td>
+                        <td>${BiblioTech.escaparHtml(libro.autor || 'Desconocido')}</td>
+                        <td>${BiblioTech.escaparHtml(prestamo.fechaRetiro)}</td>
+                        <td>${BiblioTech.escaparHtml(prestamo.fechaDevolucion)}</td>
+                        <td>${estadoHtml}</td>
+                    `;
+                } else {
+                    tr.innerHTML = `
+                        <td>${BiblioTech.escaparHtml(libro.titulo || 'Desconocido')}</td>
+                        <td>${BiblioTech.escaparHtml(libro.autor || 'Desconocido')}</td>
+                        <td>${BiblioTech.escaparHtml(prestamo.fechaDevolucionReal || prestamo.fechaDevolucion)}</td>
+                        <td><span class="etiqueta etiqueta-devuelto">Devuelto</span></td>
+                    `;
+                }
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderizarReservas(solicitudes) {
+            const tbody = document.getElementById('tbody-reservas');
+            tbody.innerHTML = '';
+
+            if (!solicitudes || solicitudes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="celda-vacia">No tenés reservas registradas.</td></tr>';
+                return;
+            }
+
+            const estados = {
+                pendiente: { texto: 'Pendiente', clase: 'etiqueta-sala' },
+                aprobada: { texto: 'Aprobada', clase: 'etiqueta-activo' },
+                rechazada: { texto: 'Rechazada', clase: 'etiqueta-moroso' }
+            };
+
+            solicitudes.forEach((solicitud) => {
+                const libro = solicitud.libro || {};
+                const estado = estados[solicitud.estado] || { texto: solicitud.estado, clase: 'etiqueta-devuelto' };
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>#${BiblioTech.escaparHtml(solicitud.id)}</td>
+                    <td>${BiblioTech.escaparHtml(libro.titulo || 'Desconocido')}</td>
+                    <td>${BiblioTech.escaparHtml(solicitud.fechaSolicitud)}</td>
+                    <td>${BiblioTech.escaparHtml(solicitud.fechaRetiro)}</td>
+                    <td>${BiblioTech.escaparHtml(solicitud.fechaDevolucion)}</td>
+                    <td><span class="etiqueta ${estado.clase}">${BiblioTech.escaparHtml(estado.texto)}</span></td>
+                    <td class="acciones">
+                        <a class="boton boton-secundario" href="/pages/confirmacion.html?solicitud=${encodeURIComponent(solicitud.id)}">Ver ticket</a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderizarSanciones(sanciones) {
+            const contenedor = document.getElementById('mensaje-sanciones');
+
+            if (!sanciones || sanciones.length === 0) {
+                contenedor.textContent = 'No tenés sanciones activas en este momento.';
+                return;
+            }
+
+            contenedor.innerHTML = `
+                <strong class="aviso aviso-error">Tenés ${sanciones.length} préstamo${sanciones.length > 1 ? 's' : ''} vencido${sanciones.length > 1 ? 's' : ''}:</strong>
+                <ul>
+                    ${sanciones.map((prestamo) => {
+                        const libro = prestamo.libro || {};
+                        return `<li>${BiblioTech.escaparHtml(libro.titulo || 'Desconocido')} - venció el ${BiblioTech.escaparHtml(prestamo.fechaDevolucion)} (${prestamo.diasAtraso} día${prestamo.diasAtraso === 1 ? '' : 's'} de atraso)</li>`;
+                    }).join('')}
+                </ul>
+            `;
+        }
+
+        async function cargarNotificaciones() {
+            const contenedor = document.getElementById('lista-notificaciones');
+
+            try {
+                const respuesta = await BiblioTech.api('/notificaciones/mias');
+
+                if (respuesta.notificaciones.length === 0) {
+                    contenedor.innerHTML = '<p>No tenés notificaciones.</p>';
+                    return;
+                }
+
+                contenedor.innerHTML = '';
+
+                respuesta.notificaciones.forEach((notificacion) => {
+                    const articulo = document.createElement('article');
+                    articulo.className = 'notificacion';
+
+                    articulo.innerHTML = `
+                        <p><strong>${BiblioTech.escaparHtml(notificacion.motivo)}</strong></p>
+                        <p class="meta">${BiblioTech.escaparHtml(notificacion.fecha)}${notificacion.libro ? ` · ${BiblioTech.escaparHtml(notificacion.libro.titulo)}` : ''}</p>
+                        <p><span class="etiqueta ${notificacion.leida ? 'etiqueta-devuelto' : 'etiqueta-moroso'}">${notificacion.leida ? 'Leída' : 'Sin leer'}</span></p>
+                    `;
+
+                    if (!notificacion.leida) {
+                        const boton = document.createElement('button');
+                        boton.type = 'button';
+                        boton.className = 'boton boton-secundario';
+                        boton.textContent = 'Marcar como leída';
+                        boton.addEventListener('click', async () => {
+                            if (!BiblioTech.confirmarAccion('¿Estás seguro de que querés marcar esta notificación como leída?')) {
+                                return;
+                            }
+
+                            try {
+                                await BiblioTech.api(`/notificaciones/${notificacion.id}/leida`, { metodo: 'POST' });
+                                cargarNotificaciones();
+                            } catch (error) {
+                                BiblioTech.mostrarAviso(error.message, 'error');
+                            }
+                        });
+                        articulo.appendChild(boton);
+                    }
+
+                    contenedor.appendChild(articulo);
+                });
+            } catch (error) {
+                contenedor.innerHTML = '';
+                BiblioTech.mostrarAviso(error.message, 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', cargarHistorial);
+    </script>
+
+    <footer class="footer-principal">
+        <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;
+           Grupo 7 &middot; v<span data-version>2.0.0</span></p>
+    </footer>
+</body>
+</html>
