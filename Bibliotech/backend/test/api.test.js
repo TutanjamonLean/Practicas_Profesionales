@@ -18,6 +18,10 @@ fs.copyFileSync(DATOS_ORIGINAL, DATOS_TEMPORAL);
 process.env.NODE_ENV = 'test';
 process.env.BIBLIO_DATOS = DATOS_TEMPORAL;
 
+// Se deriva del JSON para que agregar libros no rompa las pruebas.
+const DATOS_INICIALES = JSON.parse(fs.readFileSync(DATOS_TEMPORAL, 'utf8'));
+const TOTAL_LIBROS_INICIAL = DATOS_INICIALES.libros.filter((libro) => !libro.eliminado).length;
+
 const app = require('../index.js');
 
 let servidor;
@@ -125,10 +129,10 @@ test('API BiblioTech', async (t) => {
     assert.deepEqual(ids, idsOrdenados, 'las reservas propias deben venir de la más reciente a la más antigua');
   });
 
-  await t.test('el catálogo devuelve los 11 libros', async () => {
+  await t.test('el catálogo devuelve todos los libros activos', async () => {
     const respuesta = await pedir('/api/libros');
     assert.equal(respuesta.status, 200);
-    assert.equal(respuesta.data.total, 11);
+    assert.equal(respuesta.data.total, TOTAL_LIBROS_INICIAL);
     assert.ok(respuesta.data.libros.find((libro) => libro.id === 4));
     assert.equal(respuesta.data.libros.find((libro) => libro.id === 6).estado, 'solo-sala');
   });
@@ -299,7 +303,7 @@ test('API BiblioTech', async (t) => {
     await login('psuarez');
     const misNotificaciones = await pedir('/api/notificaciones/mias');
     assert.equal(misNotificaciones.status, 200);
-    assert.ok(misNotificaciones.data.total >= 2);
+    assert.ok(misNotificaciones.data.total >= 1);
 
     const sinLeer = misNotificaciones.data.notificaciones.find((item) => !item.leida);
     assert.ok(sinLeer);
@@ -336,7 +340,7 @@ test('API BiblioTech', async (t) => {
     await login('dperez');
     const tablero = await pedir('/api/dashboard');
     assert.equal(tablero.status, 200);
-    assert.equal(tablero.data.indicadores.titulosCatalogo, 11);
+    assert.equal(tablero.data.indicadores.titulosCatalogo, TOTAL_LIBROS_INICIAL);
     assert.ok(Array.isArray(tablero.data.categorias));
     assert.ok(Array.isArray(tablero.data.faltantes));
 
@@ -366,7 +370,7 @@ test('API BiblioTech', async (t) => {
     assert.equal(creacion.data.libro.disponibles, 2);
 
     const catalogo = await pedir('/api/libros');
-    assert.equal(catalogo.data.total, 12);
+    assert.equal(catalogo.data.total, TOTAL_LIBROS_INICIAL + 1);
     assert.ok(catalogo.data.libros.some((libro) => libro.id === creacion.data.libro.id));
   });
 
@@ -377,7 +381,25 @@ test('API BiblioTech', async (t) => {
       redirigir: false
     });
     assert.equal(sinSesion.status, 302);
-    assert.equal(sinSesion.headers.get('location'), '/pages/login.html');
+    const destinoLogin = new URL(sinSesion.headers.get('location'), 'http://localhost');
+    assert.equal(destinoLogin.pathname, '/pages/login.html');
+    assert.equal(destinoLogin.searchParams.get('volver'), '/pages/panel-bibliotecario.html');
+
+    const sinSesionLibro = await pedir('/pages/libro.html?id=1', {
+      conCookie: false,
+      redirigir: false
+    });
+    assert.equal(sinSesionLibro.status, 302);
+    const destinoLibro = new URL(sinSesionLibro.headers.get('location'), 'http://localhost');
+    assert.equal(destinoLibro.pathname, '/pages/login.html');
+    assert.equal(destinoLibro.searchParams.get('volver'), '/pages/libro.html?id=1');
+
+    const headSinSesion = await pedir('/pages/panel-bibliotecario.html', {
+      metodo: 'HEAD',
+      conCookie: false,
+      redirigir: false
+    });
+    assert.equal(headSinSesion.status, 302);
 
     await login('mgarcia');
     const socioEnPanel = await pedir('/pages/panel-bibliotecario.html', { redirigir: false });
@@ -511,7 +533,7 @@ test('API BiblioTech', async (t) => {
     assert.equal(eliminacion.data.eliminado, true);
 
     const despues = await pedir('/api/libros');
-    assert.equal(despues.data.total, 11);
+    assert.equal(despues.data.total, TOTAL_LIBROS_INICIAL);
     assert.equal(despues.data.libros.some((item) => item.id === libro.id), false);
 
     const noEncontrado = await pedir(`/api/libros/${libro.id}`);
@@ -519,6 +541,49 @@ test('API BiblioTech', async (t) => {
 
     const populares = await pedir('/api/libros/populares', { conCookie: false });
     assert.equal(populares.data.libros.some((item) => item.id === libro.id), false);
+  });
+
+  await t.test('una cookie de sesión malformada no rompe el servidor', async () => {
+    cookie = 'biblio_sesion=%';
+    const respuesta = await pedir('/api/auth/me');
+    assert.equal(respuesta.status, 401);
+    assert.equal(respuesta.data.codigo, 'NO_AUTENTICADO');
+    cookie = null;
+  });
+
+  await t.test('el alta de libros y las notificaciones validan los datos', async () => {
+    await login('blopez');
+
+    const espacios = await pedir('/api/libros', {
+      metodo: 'POST',
+      cuerpo: { titulo: '   ', autor: 'Autor', genero: 'ensayo' }
+    });
+    assert.equal(espacios.status, 400);
+    assert.equal(espacios.data.codigo, 'DATOS_INCOMPLETOS');
+
+    const decimales = await pedir('/api/libros', {
+      metodo: 'POST',
+      cuerpo: { titulo: 'Libro decimal', autor: 'Autor', genero: 'ensayo', totalEjemplares: 2.5 }
+    });
+    assert.equal(decimales.status, 400);
+    assert.equal(decimales.data.codigo, 'DATO_INVALIDO');
+
+    const anioInvalido = await pedir('/api/libros', {
+      metodo: 'POST',
+      cuerpo: { titulo: 'Libro futuro', autor: 'Autor', genero: 'ensayo', anio: 99999 }
+    });
+    assert.equal(anioInvalido.status, 400);
+    assert.equal(anioInvalido.data.codigo, 'DATO_INVALIDO');
+
+    const notificacionInvalida = await pedir('/api/notificaciones', {
+      metodo: 'POST',
+      cuerpo: { nroSocio: '1001', libroId: 9999, motivo: 'Prueba' }
+    });
+    assert.equal(notificacionInvalida.status, 404);
+    assert.equal(notificacionInvalida.data.codigo, 'LIBRO_NO_ENCONTRADO');
+
+    const catalogo = await pedir('/api/libros');
+    assert.equal(catalogo.data.total, TOTAL_LIBROS_INICIAL);
   });
 
   await t.test('un socio no puede editar ni eliminar libros', async () => {

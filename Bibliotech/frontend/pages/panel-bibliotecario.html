@@ -301,6 +301,8 @@
             const libro = librosActuales.find((item) => item.id === Number(libroId));
             if (!libro) return;
 
+            formEditar.querySelectorAll('.aviso-dinamico').forEach((aviso) => aviso.remove());
+
             document.getElementById('editar-id').value = libro.id;
             document.getElementById('editar-titulo').value = libro.titulo;
             document.getElementById('editar-autor').value = libro.autor;

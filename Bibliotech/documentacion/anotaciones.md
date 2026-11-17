@@ -52,7 +52,8 @@ Todas las cuentas usan la clave `1234`.
   cliente de la API: sesión, navbar por rol, avisos y utilidades.
 - La sesión viaja en una cookie `HttpOnly` llamada `biblio_sesion`. El servidor
   guarda las sesiones en un `Map` en memoria con vencimiento de 8 horas.
-- Toda ruta `/api/*` requiere sesión salvo `/api/health` y `/api/auth/login`.
+- Toda ruta `/api/*` requiere sesión salvo `/api/health`, `/api/config`,
+  `/api/auth/login` y `/api/libros/populares`.
 - Las páginas también están protegidas en el servidor: sin sesión redirige al
   login y, si el rol no corresponde, al inicio de ese rol.
 - Las modificaciones se escriben en `backend/data/datos.json` de forma atómica
@@ -69,10 +70,11 @@ Todas las cuentas usan la clave `1234`.
 |------------------|-----------|
 | `config`         | versión, días de préstamo (14), máximo de compromisos (3) |
 | `usuarios`       | socios, bibliotecarios y directores; incluye `esMenor` y `direccion` |
-| `libros`         | catálogo con `disponibles`, `totalEjemplares` y `soloSala` |
+| `libros`         | catálogo con `disponibles`, `totalEjemplares`, `soloSala` y `eliminado` (baja lógica) |
 | `solicitudes`    | reservas con estado `pendiente`/`aprobada`/`rechazada` |
 | `prestamos`      | préstamos con estado `activo`/`devuelto` y fecha real |
 | `notificaciones` | avisos a socios con marca `leida` |
+| `resenias`       | reseñas 1-5 con comentario; una por socio y libro |
 
 No se guardan datos derivados (morosos, devoluciones del día, disponibilidad
 total): se calculan en cada consulta para evitar inconsistencias que tenía el
@@ -99,10 +101,21 @@ una copia temporal y no tocan el archivo real.
 
 | Método | Ruta | Rol |
 |--------|------|-----|
+| GET | `/api/health` | público |
+| GET | `/api/config` | público |
 | POST | `/api/auth/login` | público |
 | POST | `/api/auth/logout` | autenticado |
 | GET | `/api/auth/me` | autenticado |
 | GET | `/api/libros` | autenticado |
+| GET | `/api/libros/populares` | público |
+| GET | `/api/libros/:id` | autenticado |
+| POST | `/api/libros` | bibliotecario |
+| PUT | `/api/libros/:id` | bibliotecario |
+| DELETE | `/api/libros/:id` | bibliotecario (baja lógica) |
+| GET | `/api/libros/:id/resenias` | autenticado |
+| POST | `/api/libros/:id/resenias` | socio |
+| POST | `/api/libros/:id/ejemplares` | bibliotecario |
+| POST | `/api/libros/:id/baja` | bibliotecario |
 | POST | `/api/solicitudes` | socio |
 | GET | `/api/solicitudes` | bibliotecario |
 | GET | `/api/solicitudes/mias` | socio |
@@ -113,8 +126,6 @@ una copia temporal y no tocan el archivo real.
 | GET | `/api/reportes/morosos` | bibliotecario/director |
 | GET | `/api/prestamos/proximos` | bibliotecario |
 | POST | `/api/prestamos/:id/devolucion` | bibliotecario |
-| POST | `/api/libros/:id/ejemplares` | bibliotecario |
-| POST | `/api/libros/:id/baja` | bibliotecario |
 | POST | `/api/notificaciones` | bibliotecario |
 | GET | `/api/notificaciones/mias` | socio |
 | GET | `/api/dashboard` | director |
@@ -123,13 +134,16 @@ El detalle completo está en el `README.md`.
 
 ## 8. Pruebas
 
-`backend/test/api.test.js` contiene 22 pruebas de integración con `node:test`.
-Resultado actual: **22/22 OK**, con estos datos medidos:
+`backend/test/api.test.js` contiene 28 pruebas de integración con `node:test`.
+Resultado actual: **28/28 OK**, con estos datos medidos:
 
-- reserva registrada en ~2,2 ms;
-- 60 consultas concurrentes completadas en ~44 ms;
+- reserva registrada en ~2,3 ms;
+- 60 consultas concurrentes completadas en ~42 ms;
 - verificación de que el apellido de la socia menor no aparece en el panel;
-- guardas de página: sin sesión -> login; socio en panel -> catálogo.
+- guardas de página: sin sesión -> login con `?volver=`; `HEAD` también protegido;
+- reseñas (crear, actualizar y privacidad), edición y baja lógica de libros;
+- validación de altas (textos vacíos, cantidades decimales, año fuera de rango);
+- una cookie malformada devuelve 401 en lugar de 500.
 
 También se verificó el frontend en Chrome headless (21 comprobaciones): páginas
 públicas, catálogo, historial, reserva, panel, reporte, tablero, alto contraste,

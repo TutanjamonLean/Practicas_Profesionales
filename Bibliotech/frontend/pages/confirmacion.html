@@ -87,6 +87,12 @@
                     aprobada: 'Aprobado (retirar en el mostrador)',
                     rechazada: 'Rechazado'
                 };
+                const clasesEstado = {
+                    pendiente: 'etiqueta-pendiente',
+                    aprobada: 'etiqueta-activo',
+                    rechazada: 'etiqueta-error'
+                };
+                const claseEstado = clasesEstado[solicitud.estado] || 'etiqueta-activo';
 
                 document.getElementById('detalle-reserva').innerHTML = `
                     <tr>
@@ -115,7 +121,7 @@
                     </tr>
                     <tr>
                         <th scope="row">Estado</th>
-                        <td><span class="etiqueta etiqueta-activo">${BiblioTech.escaparHtml(estados[solicitud.estado] || solicitud.estado)}</span></td>
+                        <td><span class="etiqueta ${claseEstado}">${BiblioTech.escaparHtml(estados[solicitud.estado] || solicitud.estado)}</span></td>
                     </tr>
                 `;
             } catch (error) {

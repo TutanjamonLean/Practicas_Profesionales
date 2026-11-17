@@ -162,7 +162,8 @@
         });
 
         document.getElementById('form-buscar').addEventListener('reset', () => {
-            setTimeout(() => renderizarLibros(librosActuales), 0);
+            // Al limpiar, volvemos a cargar el catálogo completo.
+            setTimeout(cargarLibros, 0);
         });
 
         document.addEventListener('DOMContentLoaded', cargarLibros);

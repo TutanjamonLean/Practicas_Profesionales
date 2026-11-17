@@ -290,6 +290,8 @@ tr:nth-child(even) td {
 .etiqueta-devuelto { background-color: #e3eaf3; color: #163d5c; }
 .etiqueta-moroso   { background-color: #fde7e7; color: #6b1414; }
 .etiqueta-sala     { background-color: #fff7d6; color: #6b5310; }
+.etiqueta-pendiente { background-color: #fff7d6; color: #6b5310; }
+.etiqueta-error    { background-color: #fde7e7; color: #6b1414; }
 
 /* --- Catalogo: lista de libros --- */
 .catalogo {

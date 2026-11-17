@@ -240,6 +240,33 @@ class ErrorHTTP extends Error {
   }
 }
 
+/**
+ * Normaliza un texto de entrada quitando espacios en los extremos.
+ * @param {unknown} valor
+ * @returns {string}
+ */
+function textoLimpio(valor) {
+  return String(valor ?? '').trim();
+}
+
+/**
+ * Valida un número entero dentro de un rango. Si no viene, devuelve el valor
+ * por defecto (útil para campos opcionales como el año).
+ */
+function enteroEnRango(valor, { minimo, maximo, defecto = null, campo }) {
+  if (valor === undefined || valor === null || valor === '') return defecto;
+
+  const numero = Number(valor);
+  if (!Number.isInteger(numero) || numero < minimo || numero > maximo) {
+    throw new ErrorHTTP(
+      400,
+      'DATO_INVALIDO',
+      `${campo} debe ser un número entero entre ${minimo} y ${maximo}.`
+    );
+  }
+  return numero;
+}
+
 // ---------------------------------------------------------------------------
 // Sesiones y autorización
 // ---------------------------------------------------------------------------
@@ -253,7 +280,13 @@ function tokenDePeticion(req) {
     .filter(Boolean);
   const encontrada = cookies.find((cookie) => cookie.startsWith(`${COOKIE_NAME}=`));
   if (!encontrada) return null;
-  return decodeURIComponent(encontrada.slice(COOKIE_NAME.length + 1));
+  const valor = encontrada.slice(COOKIE_NAME.length + 1);
+  try {
+    return decodeURIComponent(valor);
+  } catch {
+    // Una cookie manipulada o mal codificada equivale a no tener sesión.
+    return null;
+  }
 }
 
 function usuarioDeSesion(req) {
@@ -534,21 +567,36 @@ api.post('/libros/:id/resenias', autenticar, autorizar('socio'), (req, res) => {
 
 api.post('/libros', autenticar, autorizar('bibliotecario'), (req, res) => {
   const { titulo, autor, genero, anio, totalEjemplares, soloSala, descripcion } = req.body || {};
-  if (!titulo || !autor || !genero) {
+  const tituloLimpio = textoLimpio(titulo);
+  const autorLimpio = textoLimpio(autor);
+  const generoLimpio = textoLimpio(genero);
+
+  if (!tituloLimpio || !autorLimpio || !generoLimpio) {
     throw new ErrorHTTP(400, 'DATOS_INCOMPLETOS', 'Título, autor y género son obligatorios.');
   }
 
-  const total = Math.max(1, Number(totalEjemplares) || 1);
+  const total = enteroEnRango(totalEjemplares, {
+    minimo: 1,
+    maximo: 1000,
+    defecto: 1,
+    campo: 'La cantidad de ejemplares'
+  });
+  const anioLimpio = enteroEnRango(anio, {
+    minimo: 1000,
+    maximo: 2100,
+    campo: 'El año'
+  });
+
   const libro = {
     id: siguienteId(datos.libros),
-    titulo: String(titulo),
-    autor: String(autor),
-    genero: String(genero),
-    anio: Number(anio) || null,
+    titulo: tituloLimpio,
+    autor: autorLimpio,
+    genero: generoLimpio,
+    anio: anioLimpio,
     disponibles: total,
     totalEjemplares: total,
     soloSala: Boolean(soloSala),
-    descripcion: String(descripcion || ''),
+    descripcion: textoLimpio(descripcion),
     eliminado: false
   };
 
@@ -562,19 +610,25 @@ api.put('/libros/:id', autenticar, autorizar('bibliotecario'), (req, res) => {
   if (!libro) throw new ErrorHTTP(404, 'LIBRO_NO_ENCONTRADO', 'Libro no encontrado.');
 
   const { titulo, autor, genero, anio, descripcion, soloSala } = req.body || {};
-  const tituloLimpio = String(titulo || '').trim();
-  const autorLimpio = String(autor || '').trim();
-  const generoLimpio = String(genero || '').trim();
+  const tituloLimpio = textoLimpio(titulo);
+  const autorLimpio = textoLimpio(autor);
+  const generoLimpio = textoLimpio(genero);
 
   if (!tituloLimpio || !autorLimpio || !generoLimpio) {
     throw new ErrorHTTP(400, 'DATOS_INCOMPLETOS', 'Título, autor y género son obligatorios.');
   }
 
+  const anioLimpio = enteroEnRango(anio, {
+    minimo: 1000,
+    maximo: 2100,
+    campo: 'El año'
+  });
+
   libro.titulo = tituloLimpio;
   libro.autor = autorLimpio;
   libro.genero = generoLimpio;
-  libro.anio = Number(anio) || null;
-  libro.descripcion = String(descripcion || '').trim();
+  libro.anio = anioLimpio;
+  libro.descripcion = textoLimpio(descripcion);
   if (Object.prototype.hasOwnProperty.call(req.body || {}, 'soloSala')) {
     libro.soloSala = Boolean(soloSala);
   }
@@ -609,7 +663,12 @@ api.post('/libros/:id/ejemplares', autenticar, autorizar('bibliotecario'), (req,
   const libro = libroActivoPorId(req.params.id);
   if (!libro) throw new ErrorHTTP(404, 'LIBRO_NO_ENCONTRADO', 'Libro no encontrado.');
 
-  const cantidad = Math.max(1, Number(req.body?.cantidad) || 1);
+  const cantidad = enteroEnRango(req.body?.cantidad, {
+    minimo: 1,
+    maximo: 1000,
+    defecto: 1,
+    campo: 'La cantidad'
+  });
   libro.totalEjemplares += cantidad;
   libro.disponibles += cantidad;
   persistir();
@@ -621,7 +680,7 @@ api.post('/libros/:id/baja', autenticar, autorizar('bibliotecario'), (req, res) 
   const libro = libroActivoPorId(req.params.id);
   if (!libro) throw new ErrorHTTP(404, 'LIBRO_NO_ENCONTRADO', 'Libro no encontrado.');
   if (libro.totalEjemplares <= 0) {
-    throw new ErrorHTTP(409, 'SIN_EJEMPLARES', 'El libro no tiene ejemplares para dar de baja.');
+    throw new ErrorHTTP(409, 'SIN_EJEMPLARES', 'El libro no tiene ejemplares para quitar.');
   }
 
   libro.totalEjemplares -= 1;
@@ -905,11 +964,18 @@ api.post('/notificaciones', autenticar, autorizar('bibliotecario'), (req, res) =
   const socio = socioPorNro(nroSocio);
   if (!socio) throw new ErrorHTTP(404, 'SOCIO_NO_ENCONTRADO', 'Socio no encontrado.');
 
+  let libroIdFinal = null;
+  if (libroId !== undefined && libroId !== null && libroId !== '') {
+    const libro = libroActivoPorId(libroId);
+    if (!libro) throw new ErrorHTTP(404, 'LIBRO_NO_ENCONTRADO', 'Libro no encontrado.');
+    libroIdFinal = libro.id;
+  }
+
   const notificacion = {
     id: siguienteId(datos.notificaciones),
     nroSocio: socio.nroSocio,
-    libroId: libroId ? Number(libroId) : null,
-    motivo: String(motivo || 'Notificación de la biblioteca'),
+    libroId: libroIdFinal,
+    motivo: textoLimpio(motivo) || 'Notificación de la biblioteca',
     fecha: formatearFecha(hoy()),
     leida: false
   };
@@ -1035,13 +1101,17 @@ const ROLES_POR_PAGINA = {
 };
 
 app.use((req, res, next) => {
-  if (req.method !== 'GET' || !req.path.startsWith('/pages/')) return next();
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  if (!req.path.startsWith('/pages/')) return next();
 
   const archivo = req.path.replace('/pages', '');
   if (archivo === '/login.html') return next();
 
   const usuario = usuarioDeSesion(req);
-  if (!usuario) return res.redirect('/pages/login.html');
+  if (!usuario) {
+    // Conserva la ruta original (con query) para volver después del login.
+    return res.redirect(`/pages/login.html?volver=${encodeURIComponent(req.originalUrl)}`);
+  }
 
   const roles = ROLES_POR_PAGINA[archivo];
   if (roles && !roles.includes(usuario.rol)) {

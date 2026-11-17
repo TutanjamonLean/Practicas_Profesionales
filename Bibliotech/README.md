@@ -162,10 +162,11 @@ La persistencia es un único documento JSON con las siguientes colecciones:
 |-----------|-------------------|------------|
 | **config** | `version`, `diasPrestamo`, `maxPrestamos`, `nombreBiblioteca` | — |
 | **usuarios** | `id`, `usuario`, `clave`, `rol`, `nombre`, `apellido`, `email`, `nroSocio`, `legajo`, `esMenor`, `direccion` | 1:N solicitudes, préstamos y notificaciones (por `nroSocio`) |
-| **libros** | `id`, `titulo`, `autor`, `genero`, `anio`, `disponibles`, `totalEjemplares`, `soloSala`, `descripcion` | 1:N solicitudes y préstamos (por `libroId`) |
+| **libros** | `id`, `titulo`, `autor`, `genero`, `anio`, `disponibles`, `totalEjemplares`, `soloSala`, `descripcion`, `eliminado` | 1:N solicitudes y préstamos (por `libroId`) |
 | **solicitudes** | `id`, `nroSocio`, `libroId`, `fechaSolicitud`, `fechaRetiro`, `fechaDevolucion`, `estado` (`pendiente`/`aprobada`/`rechazada`) | N:1 usuario, N:1 libro |
 | **prestamos** | `id`, `solicitudId`, `nroSocio`, `libroId`, `fechaRetiro`, `fechaDevolucion`, `estado` (`activo`/`devuelto`), `fechaDevolucionReal` | N:1 usuario, N:1 libro, 0..1 solicitud |
 | **notificaciones** | `id`, `nroSocio`, `libroId`, `motivo`, `fecha`, `leida` | N:1 usuario, N:1 libro |
+| **resenias** | `id`, `libroId`, `nroSocio`, `puntuacion` (1-5), `comentario`, `fecha` | N:1 usuario, N:1 libro; una por socio y libro |
 
 Los datos derivados (morosos, devoluciones del día, disponibilidad total) **no se almacenan**: se calculan en cada consulta a partir de las colecciones anteriores, para evitar estados inconsistentes.
 
@@ -215,7 +216,7 @@ Director -> [Login] -> Tablero -> GET /api/dashboard
 | **RN-06** | Solo bibliotecario cambia estados de préstamo | Middleware `autorizar('bibliotecario')` |
 | **RN-07** | Baja de ejemplar => deja de estar disponible | `POST /api/libros/:id/baja` ajusta total y disponibles |
 | **RN-08** | Sin stock => no se puede reservar | `POST /api/solicitudes` responde `SIN_STOCK` |
-| **RN-09** | Toda funcionalidad requiere sesión previa | Middleware `autenticar` en todas las rutas salvo login y health |
+| **RN-09** | Toda la API requiere sesión salvo las rutas públicas | Middleware `autenticar` en todas las rutas salvo `GET /api/health`, `GET /api/config`, `POST /api/auth/login` y `GET /api/libros/populares` |
 
 ### 2.5 Matriz de Trazabilidad (Requisito -> Pantalla -> Caso de Uso)
 
@@ -618,7 +619,7 @@ Director -> [Login] -> Tablero -> GET /api/dashboard
 - **API**: middleware `autenticar` + `autorizar(...)` en cada ruta
 - **Páginas**: el servidor redirige a `/pages/login.html` si no hay sesión y al inicio del rol si no corresponde |
 | **Rutas** | `/index.html` y `/pages/login.html` son públicas; el resto requiere sesión |
-| **Implementación** | Cookie `HttpOnly` + mapa de sesiones en memoria + guardas de página |
+| **Implementación** | Cookie `HttpOnly` + mapa de sesiones en memoria + guardas de página. Al redirigir al login se conserva la ruta original en `?volver=` |
 
 ---
 
@@ -648,7 +649,7 @@ Director -> [Login] -> Tablero -> GET /api/dashboard
 
 | # | Archivo | Descripción | Casos de Uso Cubiertos |
 |---|---------|-------------|------------------------|
-| 1 | `index.html` | Landing pública: presentación y tarjetas por rol | CU-25 |
+| 1 | `index.html` | Landing pública: explicación de la biblioteca, libros más pedidos y panel de datos de la cuenta | CU-25 |
 | 2 | `pages/login.html` | Formulario usuario + contraseña, sesión real contra la API | CU-01 |
 | 3 | `pages/catalogo.html` | Buscador (texto, género, solo disponibles) contra la API y tarjetas con estado | CU-03, CU-04, CU-05 |
 | 4 | `pages/reserva.html` | Formulario de reserva con validaciones del servidor | CU-06 |
@@ -657,6 +658,7 @@ Director -> [Login] -> Tablero -> GET /api/dashboard
 | 7 | `pages/panel-bibliotecario.html` | Solicitudes (más recientes primero), devoluciones, alta de libros e inventario (alto contraste, botones grandes) | CU-12 a CU-16, CU-19, CU-20, CU-27 |
 | 8 | `pages/reportes.html` | Socios morosos agrupados y detalle de préstamos vencidos, con notificación e impresión | CU-17, CU-18, CU-21 |
 | 9 | `pages/tablero-director.html` | Indicadores, ranking de categorías y títulos faltantes | CU-22, CU-23, CU-24 |
+| 10 | `pages/libro.html` | Ficha del libro: datos completos, disponibilidad, reseñas de otros socios y formulario de reseña (1-5) | CU-03, CU-04, nuevo: reseñas |
 
 ---
 
@@ -671,7 +673,7 @@ Bibliotech/
 |   |-- data/
 |   |   `-- datos.json        (persistencia JSON, esquema v2)
 |   `-- test/
-|       `-- api.test.js       (22 pruebas de integración)
+|       `-- api.test.js       (28 pruebas de integración)
 |-- frontend/
 |   |-- index.html            (página principal - landing)
 |   |-- css/
@@ -682,6 +684,7 @@ Bibliotech/
 |   |-- pages/
 |   |   |-- login.html
 |   |   |-- catalogo.html
+|   |   |-- libro.html
 |   |   |-- reserva.html
 |   |   |-- confirmacion.html
 |   |   |-- historial.html
@@ -701,7 +704,7 @@ Bibliotech/
 
 ### Cómo levantar el proyecto
 
-Requisitos: Node.js 18 o superior.
+Requisitos: Node.js 20.10 o superior (las pruebas usan `--test-concurrency`).
 
 ```bash
 cd backend
@@ -722,8 +725,10 @@ npm test
 Las pruebas usan una copia temporal de `datos.json` y no modifican los datos
 reales. Cubren autenticación, permisos por rol, catálogo, reservas, cupo,
 colecciones únicas, sin stock, privacidad de menores, aprobación, devolución,
-rechazo, inventario, notificaciones, reporte, tablero, guardas de página,
-tiempo de respuesta y 60 consultas concurrentes.
+rechazo, inventario, notificaciones, reporte, tablero, guardas de página
+(incluido `HEAD` y `?volver=`), reseñas, edición y baja lógica de libros,
+validación de datos, cookies malformadas, tiempo de respuesta y 60 consultas
+concurrentes.
 
 ### Credenciales de prueba
 
@@ -766,7 +771,7 @@ repositorio.
 ## 7. API REST
 
 Base: `http://localhost:8080/api`. Todas las rutas requieren sesión salvo
-`/health` y `/auth/login`.
+`GET /health`, `GET /config`, `POST /auth/login` y `GET /libros/populares`.
 
 | Método | Ruta | Rol | Descripción |
 |--------|------|-----|-------------|
@@ -776,10 +781,15 @@ Base: `http://localhost:8080/api`. Todas las rutas requieren sesión salvo
 | POST | `/auth/logout` | autenticado | Cierra la sesión |
 | GET | `/auth/me` | autenticado | Datos del usuario de la sesión |
 | GET | `/libros` | autenticado | Catálogo con filtros `buscar`, `genero`, `disponible` |
-| GET | `/libros/:id` | autenticado | Detalle de un libro |
+| GET | `/libros/populares` | público | Los 6 libros más pedidos (préstamos + solicitudes no rechazadas) |
+| GET | `/libros/:id` | autenticado | Detalle de un libro activo |
 | POST | `/libros` | bibliotecario | Alta de libro |
+| PUT | `/libros/:id` | bibliotecario | Edita título, autor, género, año, descripción y `soloSala` |
+| DELETE | `/libros/:id` | bibliotecario | Baja lógica (`eliminado: true`), conserva el historial |
+| GET | `/libros/:id/resenias` | autenticado | Reseñas del libro con promedio y total |
+| POST | `/libros/:id/resenias` | socio | Crea o actualiza la reseña propia (puntuación 1-5 + comentario) |
 | POST | `/libros/:id/ejemplares` | bibliotecario | Agrega ejemplares |
-| POST | `/libros/:id/baja` | bibliotecario | Baja de un ejemplar |
+| POST | `/libros/:id/baja` | bibliotecario | Quita un ejemplar (baja de cantidad) |
 | POST | `/solicitudes` | socio | Crea una reserva |
 | GET | `/solicitudes` | bibliotecario | Lista solicitudes por estado, de la más reciente a la más antigua |
 | GET | `/solicitudes/mias` | socio | Reservas propias para consultar el ticket |
