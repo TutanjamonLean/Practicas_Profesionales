@@ -1,0 +1,14 @@
+{
+  "name": "bibliotech",
+  "version": "2.0.0",
+  "private": true,
+  "description": "BiblioTech - frontend y backend separados en un mismo repositorio",
+  "scripts": {
+    "start": "npm --prefix backend start",
+    "start:env": "npm --prefix backend run start:env",
+    "dev": "npm --prefix backend run dev",
+    "dev:env": "npm --prefix backend run dev:env",
+    "test": "npm --prefix backend test",
+    "install:backend": "npm --prefix backend install"
+  }
+}

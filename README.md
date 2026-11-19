@@ -1,6 +1,13 @@
 # BiblioTech
 
-Sistema de gestion de biblioteca para la Biblioteca Provincial "Manuel Belgrano". Prototipo HTML/CSS del Hito 02 de la materia Practicas Profesionalizantes I.
+Sistema de gestión de biblioteca para la Biblioteca Provincial "Manuel Belgrano". Implementación del **Hito 3** de la materia Prácticas Profesionalizantes I: frontend y backend separados, API REST con Node.js + Express y reglas de negocio en el servidor, con datos almacenados en memoria.
+
+### Alcance de esta entrega
+
+Esta versión corresponde al **Hito 3**. El enunciado original del caso de estudio
+planteaba persistencia en archivos JSON; el Hito 3 la reemplaza por **datos en
+memoria**, por lo que la aplicación no escribe en disco y, al reiniciar el
+servidor, vuelve a los datos iniciales de `backend/data/semilla.json`.
 
 ## Nombre del caso de estudio
 BiblioTech
@@ -9,202 +16,232 @@ BiblioTech
 Grupo 7
 
 ## Integrantes
-- German Zanatta - Rol: Tablero del director 
-- Leandro Ferrante : Diseñador
-- Lola Torres - Rol: Inicio de sesion
-- Agustin Vasto - Rol: Mi historial 
-- Matias Donato - Rol: Catalogo  
-- Thiago Gomez Rodriguez - Rol: Panel Bibliotecario
+- German Zanatta - Rol: Tablero del director
+- Leandro Ferrante - Rol: Diseñador
+- Lola Torres - Rol: Inicio de sesión
+- Agustín Vasto - Rol: Mi historial
+- Matías Donato - Rol: Catálogo
+- Thiago Gómez Rodríguez - Rol: Panel Bibliotecario
 
-## Descripcion del sistema
-BiblioTech es la aplicacion web que automatiza la gestion de prestamos de libros, el control de inventario y la administracion de socios de la Biblioteca Provincial "Manuel Belgrano". Su objetivo principal es optimizar el acceso a la cultura por parte de los vecinos, permitiendoles consultar la disponibilidad del material bibliografico y reservar ejemplares de manera rapida y segura. El sistema se centra en la autogestion del socio y opera en un entorno de red local dentro de la institucion para modernizar los procesos manuales actuales
+## Descripción del sistema
+BiblioTech es la aplicación web que automatiza la gestión de préstamos de libros, el control de inventario y la administración de socios de la Biblioteca Provincial "Manuel Belgrano". Su objetivo principal es optimizar el acceso a la cultura por parte de los vecinos, permitiéndoles consultar la disponibilidad del material bibliográfico y reservar ejemplares de manera rápida y segura. El sistema se centra en la autogestión del socio y opera en un entorno de red local dentro de la institución para modernizar los procesos manuales.
 
 El sistema contempla tres roles:
-- **Socio**: busca libros en el catalogo, solicita prestamos, consulta su historial de lecturas y revisa si tiene sanciones vigentes. Maximo de 3 prestamos simultaneos. Los menores de edad aparecen solo por su nombre de pila para proteger su privacidad.
-- **Bibliotecario**: ve solicitudes pendientes y devoluciones del dia, aprueba entregas, registra devoluciones, da de baja ejemplares deteriorados y envia notificaciones a socios morosos. Atiende el mostrador con una interfaz de alto contraste y botones grandes, pensada para voluntarios mayores con vision reducida.
-- **Director**: consulta un tablero de control unificado con el estado del catalogo, la actividad de los socios, las categorias mas leidas y los titulos faltantes en el inventario.
+- **Socio**: busca libros en el catálogo, solicita préstamos, consulta su historial de lecturas y revisa si tiene sanciones o notificaciones. Máximo de 3 préstamos simultáneos. Los menores de edad aparecen solo por su nombre de pila para proteger su privacidad.
+- **Bibliotecario**: ve solicitudes pendientes y devoluciones del día, aprueba entregas, registra devoluciones, da de alta y baja ejemplares, notifica a socios morosos, genera el reporte de vencidos y consulta la disponibilidad total del catálogo. Atiende el mostrador con una interfaz de alto contraste y botones grandes, pensada para voluntarios mayores con visión reducida.
+- **Director**: consulta un tablero de control unificado con el estado del catálogo, la actividad de los socios, las categorías más leídas y los títulos faltantes en el inventario.
 
-Reglas de negocio representadas en el prototipo:
-- Limite de 3 prestamos simultaneos por socio (se muestra como aviso).
-- Libros restringidos (colecciones unicas) solo se consultan en sala.
+Reglas de negocio implementadas en el servidor:
+- Límite de 3 compromisos simultáneos por socio (préstamos activos + solicitudes pendientes).
+- Colecciones únicas: solo consulta en sala, nunca se prestan.
 - Aviso destacado al socio cuando el libro buscado no tiene stock.
-- Interfaz de administracion con alto contraste y botones grandes.
+- Plazo de préstamo de 14 días desde el retiro.
+- Privacidad de menores: el servidor nunca envía apellido ni dirección a pantallas de terceros.
+- Interfaz de administración con alto contraste y botones grandes.
+
+## Cumplimiento de la consigna
+
+| Requisito | Dónde está implementado |
+|-----------|--------------------------|
+| Servidor Node.js + Express | `backend/index.js` |
+| API REST con endpoints para el frontend | `backend/index.js` (sección API) y tabla del §7 |
+| Lógica de dominio y reglas de negocio | validaciones y reglas en `backend/index.js`; resumen en §2.4 |
+| Datos en memoria (arrays y objetos) | `structuredClone` de `backend/data/semilla.json`; no se escribe en disco |
+| Frontend adaptado para consumir la API | `frontend/js/scripts.js` y scripts de cada página |
+| Sin `localStorage` para datos de negocio | verificado: no hay usos en `frontend/` |
+| Métodos HTTP de consulta, creación y actualización | GET, POST, PUT, PATCH y DELETE (tabla del §7) |
+| Resultados, confirmaciones y errores visibles | `mostrarAviso`, tablas dinámicas e indicador global de carga |
+| Frontend y backend separados en el mismo repo | carpetas `frontend/` y `backend/` |
+| Comunicación HTTP con JSON | `fetch` + `Content-Type: application/json` + CORS |
+| Sin credenciales ni lógica sensible en el frontend | el login solo envía usuario y clave; las reglas y los datos viven en el backend |
+| Backend valida aunque el frontend no lo haga | middleware de sesión/rol y validaciones del servidor (cubiertas por tests) |
+| Datos temporales que se pierden al reiniciar | sin persistencia: al reiniciar se vuelve a cargar la semilla |
 
 ---
 
-## 1. REQUISITOS DE LA ELICITACION
+## 1. REQUISITOS DE LA ELICITACIÓN
 
 ### 1.1 Actores y Stakeholders Identificados
 
-| Actor/Stakeholder | Rol | Interes Principal |
+| Actor/Stakeholder | Rol | Interés Principal |
 |-------------------|-----|-------------------|
-| **Socio (usuario final)** | Ciudadano que usa la biblioteca | Acceso rapido a catalogo, reserva de libros, consulta de historial y estado de prestamos |
-| **Bibliotecario / Voluntario** | Personal de atencion al publico | Gestion de prestamos/devoluciones en mostrador, notificaciones a morosos, baja de ejemplares |
-| **Director de la Biblioteca** | Autoridad decisional | Vision estrategica: indicadores de uso, categorias populares, faltantes de inventario |
-| **Administrador de Sistemas (TI)** | Soporte tecnico | Mantenimiento, despliegue en red local, seguridad, backup |
-| **Menores de edad (socios especiales)** | Grupo vulnerable | Proteccion de datos personales (solo nombre de pila visible) |
+| **Socio (usuario final)** | Ciudadano que usa la biblioteca | Acceso rápido a catálogo, reserva de libros, consulta de historial y estado de préstamos |
+| **Bibliotecario / Voluntario** | Personal de atención al público | Gestión de préstamos/devoluciones en mostrador, notificaciones a morosos, baja de ejemplares |
+| **Director de la Biblioteca** | Autoridad decisional | Visión estratégica: indicadores de uso, categorías populares, faltantes de inventario |
+| **Administrador de Sistemas (TI)** | Soporte técnico | Mantenimiento, despliegue en red local, seguridad, backup |
+| **Menores de edad (socios especiales)** | Grupo vulnerable | Protección de datos personales (solo nombre de pila visible) |
 
-### 1.2 Tecnicas de Elicitacion Aplicadas
+### 1.2 Técnicas de Elicitación Aplicadas
 
-| Tecnica | Descripcion | Artefacto Generado |
+| Técnica | Descripción | Artefacto Generado |
 |---------|-------------|-------------------|
-| **Entrevistas semiestructuradas** | Conversaciones con bibliotecarios actuales y director para entender flujo de trabajo manual | Lista de problemas: perdida de fichas, dificultad para ubicar ejemplares, notificaciones manuales lentas |
-| **Observacion directa (etnografia ligera)** | Sesiones en mostrador viendo como atienden prestamos/devoluciones actualmente | Identificacion de necesidades de accesibilidad (botones grandes, alto contraste) |
-| **Analisis de documentacion existente** | Reglamento interno de la biblioteca, normativa de proteccion al menor, estadisticas de prestamos 2024-2025 | Reglas de negocio: max 3 prestamos, coleccion unica solo sala, privacidad menores |
-| **Talleres de co-diseno** | Sesiones con voluntarios mayores para validar prototipos de interfaz | Feedback: tamano de fuente, contraste de colores, flujo simplificado |
-| **Revision de normativa legal** | Ley de Proteccion de Datos Personales, Ley de Proteccion al Menor | Restricciones: no mostrar apellido/direccion de menores a terceros |
+| **Entrevistas semiestructuradas** | Conversaciones con bibliotecarios actuales y director para entender flujo de trabajo manual | Lista de problemas: pérdida de fichas, dificultad para ubicar ejemplares, notificaciones manuales lentas |
+| **Observación directa (etnografía ligera)** | Sesiones en mostrador viendo cómo atienden préstamos/devoluciones actualmente | Identificación de necesidades de accesibilidad (botones grandes, alto contraste) |
+| **Análisis de documentación existente** | Reglamento interno de la biblioteca, normativa de protección al menor, estadísticas de préstamos 2024-2025 | Reglas de negocio: máx. 3 préstamos, colección única solo sala, privacidad menores |
+| **Talleres de co-diseño** | Sesiones con voluntarios mayores para validar prototipos de interfaz | Feedback: tamaño de fuente, contraste de colores, flujo simplificado |
+| **Revisión de normativa legal** | Ley de Protección de Datos Personales, Ley de Protección al Menor | Restricciones: no mostrar apellido/dirección de menores a terceros |
 
 ### 1.3 Requisitos Funcionales Elicitados (RF)
 
 | ID | Requisito | Prioridad | Actor | Fuente |
 |----|-----------|-----------|-------|--------|
-| RF-01 | El sistema debe permitir buscar libros por titulo, autor y genero | Alta | Socio | Entrevista + Observacion |
-| RF-02 | El sistema debe mostrar disponibilidad en tiempo real (disponibles, sin stock, solo sala) | Alta | Socio | Observacion + Documentacion |
+| RF-01 | El sistema debe permitir buscar libros por título, autor y género | Alta | Socio | Entrevista + Observación |
+| RF-02 | El sistema debe mostrar disponibilidad en tiempo real (disponibles, sin stock, solo sala) | Alta | Socio | Observación + Documentación |
 | RF-03 | El sistema debe permitir reservar un ejemplar disponible | Alta | Socio | Entrevista |
-| RF-04 | El sistema debe validar regla de maximo 3 prestamos simultaneos por socio | Alta | Socio/Bibliotecario | Reglamento interno |
-| RF-05 | El sistema debe bloquear reserva de ejemplares de coleccion unica (solo sala) | Alta | Socio | Reglamento interno |
-| RF-06 | El sistema debe generar comprobante digital de reserva con fecha limite de devolucion | Media | Socio | Entrevista |
-| RF-07 | El sistema debe mostrar historial de prestamos: activos, devueltos, sanciones | Alta | Socio | Entrevista |
-| RF-08 | El sistema debe ocultar apellido y direccion de socios menores de edad | Alta | Socio/Bibliotecario | Normativa legal |
-| RF-09 | El sistema debe mostrar solicitudes de prestamo pendientes de aprobacion | Alta | Bibliotecario | Observacion |
-| RF-10 | El sistema debe permitir aprobar/rechazar entrega de ejemplar reservado | Alta | Bibliotecario | Observacion |
-| RF-11 | El sistema debe mostrar devoluciones programadas para el dia | Alta | Bibliotecario | Observacion |
-| RF-12 | El sistema debe permitir registrar devolucion fisica de ejemplar | Alta | Bibliotecario | Observacion |
-| RF-13 | El sistema debe listar socios con prestamos vencidos (morosos) | Media | Bibliotecario | Entrevista |
-| RF-14 | El sistema debe permitir enviar notificacion a socio moroso | Media | Bibliotecario | Entrevista |
+| RF-04 | El sistema debe validar regla de máximo 3 préstamos simultáneos por socio | Alta | Socio/Bibliotecario | Reglamento interno |
+| RF-05 | El sistema debe bloquear reserva de ejemplares de colección única (solo sala) | Alta | Socio | Reglamento interno |
+| RF-06 | El sistema debe generar comprobante digital de reserva con fecha límite de devolución | Media | Socio | Entrevista |
+| RF-07 | El sistema debe mostrar historial de préstamos: activos, devueltos, sanciones | Alta | Socio | Entrevista |
+| RF-08 | El sistema debe ocultar apellido y dirección de socios menores de edad | Alta | Socio/Bibliotecario | Normativa legal |
+| RF-09 | El sistema debe mostrar solicitudes de préstamo pendientes de aprobación | Alta | Bibliotecario | Observación |
+| RF-10 | El sistema debe permitir aprobar/rechazar entrega de ejemplar reservado | Alta | Bibliotecario | Observación |
+| RF-11 | El sistema debe mostrar devoluciones programadas para el día | Alta | Bibliotecario | Observación |
+| RF-12 | El sistema debe permitir registrar devolución física de ejemplar | Alta | Bibliotecario | Observación |
+| RF-13 | El sistema debe listar socios con préstamos vencidos (morosos) | Media | Bibliotecario | Entrevista |
+| RF-14 | El sistema debe permitir enviar notificación a socio moroso | Media | Bibliotecario | Entrevista |
 | RF-15 | El sistema debe permitir dar de baja ejemplar deteriorado | Media | Bibliotecario | Entrevista |
 | RF-16 | El sistema debe permitir registrar nuevo ejemplar en inventario | Media | Bibliotecario | Entrevista |
-| RF-17 | El sistema debe generar reporte de prestamos vencidos | Baja | Bibliotecario | Entrevista |
-| RF-18 | El sistema debe mostrar dashboard con indicadores generales (socios activos, prestamos vigentes, vencidos, stock) | Alta | Director | Entrevista + Documentacion |
-| RF-19 | El sistema debe mostrar ranking de categorias mas leidas (ultimo mes) | Media | Director | Entrevista |
-| RF-20 | El sistema debe listar titulos faltantes o con stock critico (0-1 ejemplares) | Alta | Director | Entrevista |
-| RF-21 | El sistema debe autenticar usuarios por rol (socio, bibliotecario, director) | Alta | Todos | Seguridad basica |
-| RF-22 | La interfaz de bibliotecario debe tener alto contraste y botones grandes | Alta | Bibliotecario | Co-diseno + Observacion |
+| RF-17 | El sistema debe generar reporte de préstamos vencidos | Baja | Bibliotecario | Entrevista |
+| RF-18 | El sistema debe mostrar dashboard con indicadores generales (socios activos, préstamos vigentes, vencidos, stock) | Alta | Director | Entrevista + Documentación |
+| RF-19 | El sistema debe mostrar ranking de categorías más leídas | Media | Director | Entrevista |
+| RF-20 | El sistema debe listar títulos faltantes o con stock crítico (0-1 ejemplares) | Alta | Director | Entrevista |
+| RF-21 | El sistema debe autenticar usuarios con usuario y contraseña, asignando permisos según su rol (socio, bibliotecario, director) | Alta | Todos | Seguridad básica |
+| RF-22 | La interfaz de bibliotecario debe tener alto contraste y botones grandes | Alta | Bibliotecario | Co-diseño + Observación |
 
 ### 1.4 Requisitos No Funcionales Elicitados (RNF)
 
-| ID | Requisito | Categoria | Metrica/Criterio |
+| ID | Requisito | Categoría | Métrica/Criterio |
 |----|-----------|-----------|------------------|
-| RNF-01 | Despliegue en red local (intranet) sin acceso a internet | Infraestructura | Servidor local, sin dependencias externas |
-| RNF-02 | Tiempo de respuesta de busqueda en catalogo < 2 segundos | Rendimiento | 95 percentil < 2s con 10k registros |
-| RNF-03 | Interfaz accesible WCAG 2.1 AA (contraste, tamano fuente, navegacion teclado) | Accesibilidad | Auditoría automatizada + test con usuarios |
-| RNF-04 | Proteccion de datos personales de menores (pseudonimizacion) | Seguridad/Legal | Solo nombre de pila visible en UI |
-| RNF-05 | Disponibilidad 99% en horario de atencion (8hs a 20hs) | Disponibilidad | Ventana de mantenimiento fuera de horario |
-| RNF-06 | Backup automatico diario de base de datos | Integridad | Recuperacion punto en el tiempo (RPO < 24h) |
-| RNF-07 | Interfaz responsive (desktop tablet movil) | Usabilidad | Breakpoints: 1024px, 768px, 480px |
-| RNF-08 | Navegadores soportados: Chrome, Firefox, Edge (ultimas 2 versiones) | Compatibilidad | Testing cruzado |
-| RNF-09 | Separacion de responsabilidades: HTML semantico, CSS externo, JS modular (Hito 03) | Mantenibilidad | Estructura de carpetas, linting |
-| RNF-10 | Documentacion de codigo y arquitectura | Mantenibilidad | README, comentarios JSDoc, diagramas |
+| RNF-01 | Despliegue en red local (intranet) sin acceso a internet | Infraestructura | Servidor local, sin dependencias externas en tiempo de ejecución |
+| RNF-02 | Tiempo de respuesta de búsqueda y reserva < 3 segundos | Rendimiento | Medido en pruebas: reserva en ~2 ms, 60 consultas en ~44 ms |
+| RNF-03 | Interfaz accesible WCAG 2.1 AA (contraste, tamaño fuente, navegación teclado) | Accesibilidad | Auditoría + alto contraste en administración |
+| RNF-04 | Protección de datos personales de menores (seudonimización) | Seguridad/Legal | Solo nombre de pila en respuestas de terceros |
+| RNF-05 | Disponibilidad 99% en horario de atención (8 a 20 h) | Disponibilidad | Ventana de mantenimiento fuera de horario |
+| RNF-06 | Los datos se reinician al reiniciar el servidor (comportamiento intencional del prototipo) | Integridad | Semilla en memoria (`backend/data/semilla.json`) |
+| RNF-07 | Interfaz responsive (desktop, tablet, móvil) | Usabilidad | Breakpoints: 1024 px, 768 px, 480 px |
+| RNF-08 | Navegadores soportados: Chrome, Firefox (últimas 2 versiones) | Compatibilidad | Testing cruzado; verificado en Chrome |
+| RNF-09 | Separación de responsabilidades: HTML semántico, CSS externo, JS modular | Mantenibilidad | Estructura `frontend/` + `backend/` |
+| RNF-10 | Documentación de código y arquitectura | Mantenibilidad | README, comentarios JSDoc, diagramas |
+| RNF-11 | Soporte de al menos 50 consultas por minuto | Rendimiento | 60 consultas concurrentes en 44 ms (prueba automatizada) |
 
 ### 1.5 Restricciones del Proyecto
 
-| Restriccion | Descripcion |
+| Restricción | Descripción |
 |-------------|-------------|
-| **Tecnologia Hito 02** | Solo HTML5 semantico + CSS basico (sin JavaScript, sin backend) |
-| **Prototipo estatico** | Navegacion simulada via `action` en formularios y enlaces |
+| **Tecnología** | Node.js + Express 5, HTML5 semántico, CSS y JavaScript del navegador (sin frameworks) |
+| **Datos** | Estructuras en memoria (arrays y objetos); no se usa base de datos |
+| **Autenticación** | Cookie de sesión `HttpOnly` administrada por el servidor |
 | **Entorno** | Red local de la biblioteca (sin cloud, sin CDN) |
 | **Equipo** | 6 integrantes, roles definidos por pantalla |
-| **Plazo** | Entrega Hito 02: prototipo navegable completo |
-| **Normativa** | Cumplimiento Ley Proteccion Datos + Ley Proteccion Menor |
+| **Normativa** | Cumplimiento Ley Protección Datos + Ley Protección Menor |
 
 ---
 
-## 2. ANALISIS FUNCIONAL
+## 2. ANÁLISIS FUNCIONAL
 
-### 2.1 Descomposicion Funcional (Casos de Uso por Subsistema)
+### 2.1 Descomposición Funcional (Casos de Uso por Subsistema)
 
 ```
 BIBLIOTECH
-├── AUTENTICACION Y ACCESO
-│   ├── CU-01: Iniciar sesion
-│   └── CU-02: Cerrar sesion
-├── GESTION DE CATALOGO (SOCIO)
+├── AUTENTICACIÓN Y ACCESO
+│   ├── CU-01: Iniciar sesión
+│   └── CU-02: Cerrar sesión
+├── GESTIÓN DE CATÁLOGO (SOCIO)
 │   ├── CU-03: Buscar libros
-│   ├── CU-04: Filtrar por genero/disponibilidad
+│   ├── CU-04: Filtrar por género/disponibilidad
 │   ├── CU-05: Ver detalle de libro y disponibilidad
 │   └── CU-06: Reservar ejemplar
-├── GESTION DE PRESTAMOS (SOCIO)
+├── GESTIÓN DE PRÉSTAMOS (SOCIO)
 │   ├── CU-07: Confirmar reserva (comprobante)
-│   ├── CU-08: Consultar historial de prestamos
-│   ├── CU-09: Ver prestamos activos
+│   ├── CU-08: Consultar historial de préstamos
+│   ├── CU-09: Ver préstamos activos
 │   ├── CU-10: Ver libros devueltos
-│   └── CU-11: Ver sanciones vigentes
-├── ATENCION EN MOSTRADOR (BIBLIOTECARIO)
+│   ├── CU-11: Ver sanciones y notificaciones
+├── ATENCIÓN EN MOSTRADOR (BIBLIOTECARIO)
 │   ├── CU-12: Ver solicitudes pendientes
 │   ├── CU-13: Aprobar entrega de ejemplar
-│   ├── CU-14: Rechazar solicitud de prestamo
-│   ├── CU-15: Ver devoluciones del dia
-│   ├── CU-16: Registrar devolucion fisica
+│   ├── CU-14: Rechazar solicitud de préstamo
+│   ├── CU-15: Ver devoluciones del día
+│   ├── CU-16: Registrar devolución física
 │   ├── CU-17: Ver socios morosos
-│   ├── CU-18: Enviar notificacion a moroso
+│   ├── CU-18: Enviar notificación a moroso
 │   ├── CU-19: Dar de baja ejemplar deteriorado
 │   ├── CU-20: Registrar nuevo ejemplar
-│   └── CU-21: Generar reporte de prestamos vencidos
+│   ├── CU-21: Generar reporte de préstamos vencidos
+│   └── CU-27: Consultar disponibilidad total del catálogo
 ├── TABLERO DIRECTIVO (DIRECTOR)
 │   ├── CU-22: Ver indicadores generales
-│   ├── CU-23: Ver ranking categorias mas leidas
-│   └── CU-24: Ver titulos faltantes en inventario
+│   ├── CU-23: Ver ranking categorías más leídas
+│   └── CU-24: Ver títulos faltantes en inventario
 └── TRANSVERSALES
-    ├── CU-25: Navegar entre pantallas (menu principal)
-    └── CU-26: Acceso segun rol (autorizacion)
+    ├── CU-25: Navegar entre pantallas (menú principal)
+    ├── CU-26: Acceso según rol (autorización)
+    └── CU-28: Persistir cambios en el servidor
 ```
 
-### 2.2 Modelo de Datos Conceptual (Entidades Principales)
+### 2.2 Modelo de Datos Implementado (esquema v2)
 
-| Entidad | Atributos Clave | Relaciones |
-|---------|-----------------|------------|
-| **Socio** | nro_socio (PK), nombre, apellido, dni, fecha_nac, es_menor, direccion, telefono, email, estado_activo, sanciones_count | 1:N Prestamo, 1:N Notificacion |
-| **Libro** | isbn (PK), titulo, autor, genero, anio_publicacion, editorial, coleccion_unica (bool) | 1:N Ejemplar |
-| **Ejemplar** | nro_ejemplar (PK), isbn (FK), estado (disponible/prestado/en_sala/baja), ubicacion | N:1 Libro, 1:N Prestamo |
-| **Prestamo** | id_prestamo (PK), nro_socio (FK), nro_ejemplar (FK), fecha_reserva, fecha_retiro, fecha_devolucion_estimada, fecha_devolucion_real, estado (reservado/activo/devuelto/vencido) | N:1 Socio, N:1 Ejemplar |
-| **Sancion** | id_sancion (PK), nro_socio (FK), tipo (retraso/perdida/deterioro), fecha_inicio, fecha_fin, descripcion, estado (activa/cumplida) | N:1 Socio |
-| **Notificacion** | id_notif (PK), nro_socio (FK), tipo (vencimiento/moroso/novedad), mensaje, fecha_envio, leida (bool) | N:1 Socio |
-| **UsuarioSistema** | username (PK), password_hash, rol (socio/bibliotecario/director), nro_socio (FK, nullable), activo (bool) | 1:1 Socio (opcional) |
+Al iniciar, el servidor copia la semilla (`backend/data/semilla.json`) a estructuras en memoria con las siguientes colecciones. Los cambios se pierden al reiniciar:
+
+| Colección | Campos principales | Relaciones |
+|-----------|-------------------|------------|
+| **config** | `version`, `diasPrestamo`, `maxPrestamos`, `nombreBiblioteca` | — |
+| **usuarios** | `id`, `usuario`, `clave`, `rol`, `nombre`, `apellido`, `email`, `nroSocio`, `legajo`, `esMenor`, `direccion` | 1:N solicitudes, préstamos y notificaciones (por `nroSocio`) |
+| **libros** | `id`, `titulo`, `autor`, `genero`, `anio`, `disponibles`, `totalEjemplares`, `soloSala`, `descripcion`, `eliminado` | 1:N solicitudes y préstamos (por `libroId`) |
+| **solicitudes** | `id`, `nroSocio`, `libroId`, `fechaSolicitud`, `fechaRetiro`, `fechaDevolucion`, `estado` (`pendiente`/`aprobada`/`rechazada`) | N:1 usuario, N:1 libro |
+| **prestamos** | `id`, `solicitudId`, `nroSocio`, `libroId`, `fechaRetiro`, `fechaDevolucion`, `estado` (`activo`/`devuelto`), `fechaDevolucionReal` | N:1 usuario, N:1 libro, 0..1 solicitud |
+| **notificaciones** | `id`, `nroSocio`, `libroId`, `motivo`, `fecha`, `leida` | N:1 usuario, N:1 libro |
+| **resenias** | `id`, `libroId`, `nroSocio`, `puntuacion` (1-5), `comentario`, `fecha` | N:1 usuario, N:1 libro; una por socio y libro |
+
+Los datos derivados (morosos, devoluciones del día, disponibilidad total) **no se almacenan**: se calculan en cada consulta a partir de las colecciones anteriores, para evitar estados inconsistentes.
+
+> Nota de seguridad: en este prototipo las contraseñas se guardan en texto plano. Para producción corresponde almacenar un hash (por ejemplo `bcrypt` o `scrypt`) y nunca devolverlo por la API.
 
 ### 2.3 Flujos Principales (Secuencias)
 
 #### Flujo F-01: Reserva de Libro por Socio
 ```
-Socio -> [Login] -> Catalogo -> [Buscar/Filtrar] -> Lista resultados
-  -> [Click Reservar] -> Formulario Reserva -> [Validar: stock>0, prestamos<3, no coleccion_unica]
-  -> [Exito] -> Confirmacion (comprobante con fecha limite) -> Historial
-  -> [Fallo] -> Aviso en pantalla (stock 0 / limite 3 / solo sala) -> Catalogo
+Socio -> [Login] -> Catálogo -> [Buscar/Filtrar] -> Lista resultados
+  -> [Click Reservar] -> Formulario Reserva -> POST /api/solicitudes
+  -> [Validar en servidor: stock>0, compromisos<3, no soloSala, fecha válida]
+  -> [Éxito] -> Confirmación (comprobante con fecha límite) -> Historial
+  -> [Fallo] -> Aviso en pantalla (sin stock / cupo excedido / solo sala)
 ```
 
 #### Flujo F-02: Entrega en Mostrador (Bibliotecario)
 ```
-Bibliotecario -> [Login] -> Panel -> [Ver Solicitudes Pendientes]
-  -> [Click Aprobar] -> Cambia estado Prestamo: reservado -> activo
-  -> Registra fecha_retiro = hoy -> Actualiza Ejemplar: disponible -> prestado
-  -> [Opcional] -> Imprime/entrega comprobante fisico
+Bibliotecario -> [Login] -> Panel -> [Ver solicitudes pendientes]
+  -> [Click Aprobar] -> PATCH /api/solicitudes/:id { "estado": "aprobada" }
+  -> Crea préstamo activo -> El stock ya estaba descontado al reservar
 ```
 
-#### Flujo F-03: Devolucion en Mostrador
+#### Flujo F-03: Devolución en Mostrador
 ```
-Bibliotecario -> Panel -> [Ver Devoluciones del Dia]
-  -> [Click Registrar] -> Cambia estado Prestamo: activo -> devuelto
-  -> Registra fecha_devolucion_real = hoy -> Actualiza Ejemplar: prestado -> disponible
-  -> [Si vencido] -> Genera Sancion automatica -> Notifica al socio
+Bibliotecario -> Panel -> [Ver devoluciones del día]
+  -> [Click Registrar devolución] -> PATCH /api/prestamos/:id { "estado": "devuelto" }
+  -> estado='devuelto' + fecha real -> Stock +1 -> Si estaba vencido, figuraba en morosos
 ```
 
 #### Flujo F-04: Consulta Directiva
 ```
-Director -> [Login] -> Tablero -> Carga indicadores (queries agregadas)
-  -> [Ver Categorias] -> Ranking por count(prestamos) group by genero (ultimo mes)
-  -> [Ver Faltantes] -> Libros con count(ejemplares_disponibles) <= 1
+Director -> [Login] -> Tablero -> GET /api/dashboard
+  -> Indicadores calculados en el servidor
+  -> Ranking por género -> Libros con 0 o 1 ejemplar disponible
 ```
 
 ### 2.4 Reglas de Negocio Formales
 
-| Regla | Descripcion | Expresion Formal |
-|-------|-------------|------------------|
-| **RN-01** | Maximo 3 prestamos activos simultaneos por socio | `COUNT(p WHERE p.socio = s AND p.estado IN ('reservado','activo')) <= 3` |
-| **RN-02** | Coleccion unica => solo consulta en sala (no prestable) | `IF libro.coleccion_unica THEN ejemplar.estado != 'disponible_para_prestamo'` |
-| **RN-03** | Menor de edad => pseudonimizacion en vistas terceros | `IF socio.es_menor AND vista != 'propia' THEN mostrar(solo nombre_pila)` |
-| **RN-04** | Prestamo vencido => sancion automatica + notificacion | `IF prestamo.fecha_devolucion_estimada < HOY AND estado='activo' THEN crear_sancion + notificar` |
-| **RN-05** | Fecha limite devolucion = fecha_retiro + 14 dias | `fecha_devolucion_estimada = fecha_retiro + 14d` |
-| **RN-06** | Solo bibliotecario puede cambiar estado prestamo a 'activo' | `ROL(usuario) = 'bibliotecario' REQUIRED FOR transition(reservado -> activo)` |
-| **RN-07** | Baja de ejemplar => no prestable, cuenta en inventario | `ejemplar.estado = 'baja' => NOT disponible_para_prestamo` |
+| Regla | Descripción | Implementación |
+|-------|-------------|----------------|
+| **RN-01** | Máximo 3 compromisos simultáneos por socio (activos + pendientes) | `POST /api/solicitudes` responde `CUPO_EXCEDIDO` |
+| **RN-02** | Colección única => solo consulta en sala | `POST /api/solicitudes` responde `LIBRO_SOLO_SALA` |
+| **RN-03** | Menor de edad => seudonimización en vistas de terceros | `nombreVisible()` devuelve solo el nombre de pila |
+| **RN-04** | Préstamo vencido => aparece en morosos y puede notificarse | `GET /api/prestamos/vencidos` compara la fecha límite con hoy |
+| **RN-05** | Fecha límite = fecha de retiro + 14 días | Configurable en `config.diasPrestamo` |
+| **RN-06** | Solo bibliotecario cambia estados de préstamo | Middleware `autorizar('bibliotecario')` |
+| **RN-07** | Baja de ejemplar => deja de estar disponible | `POST /api/libros/:id/baja` ajusta total y disponibles |
+| **RN-08** | Sin stock => no se puede reservar | `POST /api/solicitudes` responde `SIN_STOCK` |
+| **RN-09** | Toda la API requiere sesión salvo las rutas públicas | Middleware `autenticar` en todas las rutas salvo `GET /api/health`, `GET /api/config`, `POST /api/auth/login` y `GET /api/libros/populares` |
 
 ### 2.5 Matriz de Trazabilidad (Requisito -> Pantalla -> Caso de Uso)
 
@@ -214,13 +251,13 @@ Director -> [Login] -> Tablero -> Carga indicadores (queries agregadas)
 | RF-03, RF-04, RF-05 | `pages/reserva.html` | CU-06 |
 | RF-06 | `pages/confirmacion.html` | CU-07 |
 | RF-07, RF-08 | `pages/historial.html` | CU-08, CU-09, CU-10, CU-11 |
-| RF-09, RF-10 | `pages/panel-bibliotecario.html` (seccion 1) | CU-12, CU-13, CU-14 |
-| RF-11, RF-12 | `pages/panel-bibliotecario.html` (seccion 2) | CU-15, CU-16 |
-| RF-13, RF-14 | `pages/panel-bibliotecario.html` (seccion 3) | CU-17, CU-18 |
-| RF-15, RF-16, RF-17 | `pages/panel-bibliotecario.html` (seccion 4) | CU-19, CU-20, CU-21 |
-| RF-18 | `pages/tablero-director.html` (seccion 1) | CU-22 |
-| RF-19 | `pages/tablero-director.html` (seccion 2) | CU-23 |
-| RF-20 | `pages/tablero-director.html` (seccion 3) | CU-24 |
+| RF-09, RF-10 | `pages/panel-bibliotecario.html` (solicitudes) | CU-12, CU-13, CU-14 |
+| RF-11, RF-12 | `pages/panel-bibliotecario.html` (devoluciones) | CU-15, CU-16 |
+| RF-13, RF-14 | `pages/panel-bibliotecario.html` (morosos) | CU-17, CU-18 |
+| RF-15, RF-16, RF-17 | `pages/panel-bibliotecario.html` (inventario y reporte) | CU-19, CU-20, CU-21 |
+| RF-18 | `pages/tablero-director.html` (indicadores) | CU-22 |
+| RF-19 | `pages/tablero-director.html` (categorías) | CU-23 |
+| RF-20 | `pages/tablero-director.html` (faltantes) | CU-24 |
 | RF-21 | `pages/login.html` | CU-01, CU-02 |
 | RF-22 | `pages/panel-bibliotecario.html` (estilos) | Transversal (RNF-03) |
 | RNF-03 | Todas (CSS alto contraste, botones grandes) | Transversal |
@@ -230,443 +267,645 @@ Director -> [Login] -> Tablero -> Carga indicadores (queries agregadas)
 
 ## 3. CASOS DE USO DETALLADOS
 
-### Formato: Caso de Uso Completo (Actor, Precondicion, Flujo Principal, Flujos Alternativos, Postcondicion)
+### Formato: Caso de Uso Completo (Actor, Precondición, Flujo Principal, Flujos Alternativos, Postcondición)
 
 ---
 
-#### CU-01: Iniciar Sesion
-| Campo | Descripcion |
+#### CU-01: Iniciar Sesión
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Socio, Bibliotecario, Director |
-| **Actor Secundario** | Sistema de Autenticacion |
-| **Precondicion** | Usuario registrado en sistema, credenciales validas |
-| **Disparador** | Usuario accede a `login.html` y envia formulario |
+| **Actor Secundario** | Sistema de Autenticación |
+| **Precondición** | Usuario registrado en sistema, credenciales válidas |
+| **Disparador** | Usuario accede a `login.html` y envía formulario |
 
 **Flujo Principal:**
-1. Usuario ingresa usuario, contrasena y selecciona rol (Socio/Bibliotecario/Director)
-2. Sistema valida credenciales contra base de datos
-3. Si valido: crea sesion, redirige a pagina segun rol:
+1. Usuario ingresa usuario y contraseña (el rol no se elige: lo determina la cuenta)
+2. `POST /api/auth/login` valida las credenciales contra los usuarios cargados en memoria
+3. Si es válido: el servidor crea una sesión y responde con la cookie `biblio_sesion`
+4. El frontend redirige según el rol de la cuenta:
    - Socio -> `catalogo.html`
    - Bibliotecario -> `panel-bibliotecario.html`
    - Director -> `tablero-director.html`
-4. Sistema registra auditoria de acceso (timestamp, IP, rol)
 
 **Flujos Alternativos:**
-- **A1: Credenciales invalidas** -> Muestra error "Usuario/contraseña incorrectos", permite reintento (max 3)
-- **A2: Usuario inactivo/bloqueado** -> Muestra "Cuenta deshabilitada, contacte administracion"
-- **A3: Rol no coincide** -> Muestra "El rol seleccionado no corresponde a este usuario"
+- **A1: Credenciales inválidas** -> `401 CREDENCIALES_INVALIDAS`, permite reintento
+- **A2: Datos incompletos** -> `400 DATOS_INCOMPLETOS`
 
-**Postcondicion:** Usuario autenticado con sesion activa, permisos segun rol asignado.
+**Postcondición:** Usuario autenticado con sesión activa, permisos según rol asignado.
 
-**Reglas de Negocio:** RN-06 (autorizacion por rol), RNF-04 (proteccion datos)
+**Reglas de Negocio:** RN-06, RN-09
 
 ---
 
-#### CU-02: Cerrar Sesion
-| Campo | Descripcion |
+#### CU-02: Cerrar Sesión
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Socio, Bibliotecario, Director |
-| **Precondicion** | Sesion activa |
-| **Disparador** | Usuario click en "Cerrar sesion" (pendiente implementacion Hito 03) |
+| **Precondición** | Sesión activa |
+| **Disparador** | Click en "Cerrar sesión" en la navbar |
 
 **Flujo Principal:**
-1. Usuario solicita cerrar sesion
-2. Sistema invalida token/sesion, limpia almacenamiento local
-3. Redirige a `index.html` (publico)
+1. El frontend llama a `POST /api/auth/logout`
+2. El servidor invalida la sesión y borra la cookie
+3. Redirige a `index.html` (público)
 
-**Postcondicion:** Sesion terminada, acceso a areas protegidas denegado.
+**Postcondición:** Sesión terminada, acceso a áreas protegidas denegado.
 
 ---
 
 #### CU-03: Buscar Libros
-| Campo | Descripcion |
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Socio |
-| **Precondicion** | Usuario autenticado como socio, acceso a `catalogo.html` |
-| **Disparador** | Usuario ingresa termino y/o selecciona filtros, click "Buscar" |
+| **Precondición** | Usuario autenticado, acceso a `catalogo.html` |
+| **Disparador** | Usuario ingresa término y/o selecciona filtros, click "Buscar" |
 
 **Flujo Principal:**
-1. Sistema recibe parametros: termino (texto libre), genero (select), solo_disponibles (checkbox)
-2. Ejecuta consulta: `LIKE %termino%` en titulo/autor + `genero = seleccion` + `disponibles > 0` (si check)
-3. Retorna lista paginada de libros con: titulo, autor, genero, anio, disponibilidad
-4. Muestra badge de estado por ejemplar: "X disponibles" / "Sin stock" / "Solo sala"
+1. El frontend arma la consulta `GET /api/libros?buscar=&genero=&disponible=1`
+2. El servidor filtra por título, autor y género; aplica el filtro de disponibilidad
+3. Devuelve la lista con estado por libro: `disponible`, `sin-stock` o `solo-sala`
+4. La página muestra el resumen de resultados y las tarjetas
 
 **Flujos Alternativos:**
-- **A1: Sin resultados** -> Muestra "No se encontraron libros", sugiere ampliar busqueda
-- **A2: Termino vacio sin filtros** -> Muestra catalogo completo (paginado)
+- **A1: Sin resultados** -> "No se encontraron libros", sugiere ampliar la búsqueda
+- **A2: Término vacío sin filtros** -> catálogo completo
 
-**Postcondicion:** Lista de resultados mostrada, usuario puede seleccionar para reservar.
-
-**Reglas de Negocio:** RN-02 (coleccion unica muestra "Solo sala")
+**Postcondición:** Lista de resultados mostrada, el socio puede reservar si corresponde.
 
 ---
 
-#### CU-04: Filtrar por Genero/Disponibilidad
-| Campo | Descripcion |
+#### CU-04: Filtrar por Género/Disponibilidad
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Socio |
-| **Precondicion** | En `catalogo.html` |
-| **Disparador** | Cambia select genero y/o checkbox "Solo disponibles", click "Buscar" |
+| **Precondición** | En `catalogo.html` |
+| **Disparador** | Cambia el select de género y/o el checkbox "Solo disponibles" |
 
-**Flujo Principal:** Igual a CU-03 paso 2-4 con filtros aplicados.
+**Flujo Principal:** Igual a CU-03, con los filtros aplicados en el servidor.
 
 ---
 
 #### CU-05: Ver Detalle y Disponibilidad
-| Campo | Descripcion |
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Socio |
-| **Precondicion** | Resultados de busqueda visibles |
-| **Disparador** | Usuario visualiza tarjeta de libro en catalogo |
+| **Precondición** | Resultados de búsqueda visibles |
+| **Disparador** | El usuario visualiza una tarjeta de libro |
 
 **Flujo Principal:**
-1. Sistema muestra por cada libro: titulo, autor, genero, anio
-2. Badge de estado:
-   - Verde "X disponibles" -> boton "Reservar" habilitado
-   - Rojo "Sin stock disponible" -> boton deshabilitado, aviso "Te avisaremos..."
-   - Amarillo "Solo consulta en sala" -> sin boton reservar, texto explicativo
-3. Usuario decide reservar (si habilitado) -> va a CU-06
+1. La tarjeta muestra título, autor, género, año y descripción
+2. Etiqueta de estado:
+   - Verde "X disponibles de Y" -> botón "Reservar" habilitado
+   - Rojo "Sin stock disponible" -> sin botón, aviso "Te avisaremos..."
+   - Amarillo/azul "Solo consulta en sala" -> sin botón de reserva
 
 ---
 
 #### CU-06: Reservar Ejemplar
-| Campo | Descripcion |
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Socio |
-| **Precondicion** | Libro con stock > 0, no coleccion_unica, socio con < 3 prestamos activos |
-| **Disparador** | Click "Reservar" en catalogo -> `reserva.html` |
+| **Precondición** | Libro con stock > 0, no `soloSala`, socio con menos de 3 compromisos |
+| **Disparador** | Click "Reservar" en catálogo -> `reserva.html?libro=ID` |
 
 **Flujo Principal:**
-1. `reserva.html` muestra formulario con: titulo, autor (prellenados), nro_ejemplar, nro_socio, fecha_retiro
-2. Usuario completa datos, click "Confirmar reserva"
-3. Sistema valida en servidor (Hito 03):
-   - `ejemplar.estado = 'disponible'`
-   - `COUNT(prestamos_activos(socio)) < 3`
-   - `libro.coleccion_unica = FALSE`
-4. Si todo OK: crea Prestamo(estado='reservado'), calcula fecha_limite = fecha_retiro + 14d
-5. Redirige a `confirmacion.html` con comprobante
+1. `reserva.html` carga el libro con `GET /api/libros/:id` y completa el nro. de socio desde la sesión
+2. Usuario elige la fecha de retiro y confirma
+3. El servidor valida:
+   - libro existente y no `soloSala`
+   - `disponibles > 0`
+   - compromisos del socio < 3
+   - fecha de retiro válida y no anterior a hoy
+4. Crea la solicitud `pendiente`, descuenta un ejemplar y responde `201`
+5. Redirige a `confirmacion.html?solicitud=ID`
 
 **Flujos Alternativos:**
-- **A1: Stock 0** -> `confirmacion.html` con error "Ejemplar no disponible"
-- **A2: Limite 3 prestamos** -> Error "Ya tiene 3 prestamos activos"
-- **A3: Coleccion unica** -> Error "Este ejemplar es de uso exclusivo en sala"
-- **A4: Socio inexistente** -> Error "Numero de socio no encontrado"
-- **A5: Cancelar** -> Click "Cancelar" -> vuelve a `catalogo.html`
+- **A1: Sin stock** -> `409 SIN_STOCK`
+- **A2: Límite de 3** -> `409 CUPO_EXCEDIDO`
+- **A3: Colección única** -> `409 LIBRO_SOLO_SALA`
+- **A4: Fecha inválida** -> `400 FECHA_INVALIDA`
+- **A5: Cancelar** -> vuelve a `catalogo.html`
 
-**Postcondicion:** Reserva registrada (estado 'reservado'), comprobante generado, stock decrementado logicamente.
+**Postcondición:** Solicitud registrada, stock decrementado y comprobante disponible.
 
-**Reglas de Negocio:** RN-01, RN-02, RN-05
+**Reglas de Negocio:** RN-01, RN-02, RN-05, RN-08
 
 ---
 
 #### CU-07: Confirmar Reserva (Comprobante)
-| Campo | Descripcion |
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Socio |
-| **Precondicion** | Reserva exitosa (CU-06) |
-| **Disparador** | Redireccion automatica a `confirmacion.html` |
+| **Precondición** | Reserva exitosa (CU-06) |
+| **Disparador** | Redirección automática a `confirmacion.html` |
 
 **Flujo Principal:**
-1. Muestra comprobante digital con: titulo, autor, nro_socio, fecha_solicitud, fecha_limite_devolucion, estado="Reservado"
-2. Instrucciones: "Acerca este comprobante al mostrador para retirar el ejemplar"
-3. Enlaces: "Volver al catalogo", "Ir a Mi historial", "Ir al inicio"
-
-**Postcondicion:** Socio informado, proximo paso: retiro fisico en mostrador (CU-13).
+1. La página consulta `GET /api/solicitudes/:id` (solo el dueño o un bibliotecario)
+2. Muestra título, autor, nro. de socio, fecha de solicitud, fecha límite y estado
+3. Enlaces: "Volver al catálogo", "Ir a Mi historial", "Ir al inicio"
 
 ---
 
-#### CU-08: Consultar Historial de Prestamos
-| Campo | Descripcion |
+#### CU-08: Consultar Historial de Préstamos
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Socio |
-| **Precondicion** | Autenticado como socio, acceso a `historial.html` |
-| **Disparador** | Navegacion a "Mi historial" |
+| **Precondición** | Autenticado como socio |
+| **Disparador** | Navegación a "Mi historial" |
 
 **Flujo Principal:**
-1. Sistema carga 3 secciones tabuladas:
-   - **Prestamos activos**: tabla (titulo, autor, retirado, devolucion, estado="Activo")
-   - **Libros devueltos**: tabla (titulo, autor, devuelto_el, estado="Devuelto")
-   - **Sanciones vigentes**: lista o mensaje "Sin sanciones"
-2. Aplica RN-03: si socio es menor, oculta apellido/direccion en cualquier vista
+1. `GET /api/prestamos/mios` devuelve activos, devueltos y sanciones
+2. `GET /api/solicitudes/mias` devuelve las reservas propias, de la más reciente a la más antigua
+3. La página renderiza las secciones, el botón "Ver ticket" de cada reserva y las notificaciones (`GET /api/notificaciones/mias`)
+4. El ticket abre `confirmacion.html?solicitud=ID` y puede imprimirse
+5. Cada préstamo activo vencido se marca como "Vencido" con los días de atraso
 
-**Postcondicion:** Historial mostrado completo y filtrado por privacidad.
+**Postcondición:** Historial completo, filtrado por privacidad.
 
 ---
 
-#### CU-09/10/11: Ver Prestamos Activos / Devueltos / Sanciones
-| Campo | Descripcion |
+#### CU-09/10/11: Ver Préstamos Activos / Devueltos / Sanciones y Notificaciones
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Socio |
-| **Descripcion** | Sub-casos de CU-08, cada seccion es un caso de uso atomico para trazabilidad |
+| **Descripción** | Sub-casos de CU-08; cada sección es un caso de uso atómico para trazabilidad |
 
 ---
 
 #### CU-12: Ver Solicitudes Pendientes (Bibliotecario)
-| Campo | Descripcion |
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Bibliotecario |
-| **Precondicion** | Autenticado como bibliotecario, `panel-bibliotecario.html` |
-| **Disparador** | Carga de panel (seccion 1) |
+| **Precondición** | Autenticado como bibliotecario |
+| **Disparador** | Carga del panel (se refresca cada 15 s) |
 
 **Flujo Principal:**
-1. Sistema consulta: `Prestamo WHERE estado='reservado' ORDER BY fecha_reserva`
-2. Muestra tabla: Socio (pseudonimizado si menor), Titulo, Fecha, Acciones [Aprobar][Rechazar]
-3. Bibliotecario ve lista de espera para atender en mostrador
+1. `GET /api/solicitudes?estado=pendiente`, ordenadas por el último orden de llegada (la más reciente primero)
+2. Tabla: Socio (seudonimizado si es menor), Título, Solicitado, Retiro, Vencimiento, Acciones
 
-**Reglas:** RN-03 (menores -> solo nombre pila), RNF-03 (UI alto contraste)
+**Reglas:** RN-03, RNF-03
 
 ---
 
 #### CU-13: Aprobar Entrega de Ejemplar
-| Campo | Descripcion |
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Bibliotecario |
-| **Precondicion** | Existe Prestamo estado='reservado', socio presente en mostrador |
-| **Disparador** | Click "Aprobar entrega" en fila de solicitud |
+| **Precondición** | Solicitud `pendiente`, socio presente en mostrador |
+| **Disparador** | Click "Aprobar entrega" |
 
 **Flujo Principal:**
-1. Sistema valida: ejemplar sigue disponible, socio vigente
-2. Actualiza Prestamo: estado='activo', fecha_retiro=HOY, fecha_devolucion_estimada=HOY+14d
-3. Actualiza Ejemplar: estado='prestado'
-4. Muestra confirmacion "Entrega aprobada", opcion imprimir comprobante
-5. (Opcional) Notifica al socio: "Su libro ya puede retirarse"
+1. `PATCH /api/solicitudes/:id` con `{ "estado": "aprobada" }`
+2. El servidor crea el préstamo `activo` con las fechas de la solicitud
+3. La solicitud pasa a `aprobada`; el stock **no** se descuenta otra vez (ya se reservó)
+4. El panel se recarga y muestra el aviso de éxito
 
 **Flujos Alternativos:**
-- **A1: Ejemplar ya no disponible** -> Error "Ejemplar prestado a otro usuario"
-- **A2: Socio con sancion activa** -> Advertencia "Socio tiene sancion, ¿continuar?"
-
-**Reglas:** RN-05, RN-06 (solo bibliotecario), RN-01 (revalida limite)
+- **A1: Solicitud ya procesada** -> `409 SOLICITUD_NO_PENDIENTE`
 
 ---
 
 #### CU-14: Rechazar Solicitud
-| Campo | Descripcion |
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Bibliotecario |
-| **Precondicion** | Prestamo estado='reservado' |
+| **Precondición** | Solicitud `pendiente` |
 | **Disparador** | Click "Rechazar" |
 
 **Flujo Principal:**
-1. Sistema pide motivo (select: stock_error / socio_invalido / otro + texto)
-2. Actualiza Prestamo: estado='rechazado', motivo_rechazo
-3. Libera ejemplar: estado='disponible'
-4. Notifica al socio: "Su reserva fue rechazada: [motivo]"
+1. `PATCH /api/solicitudes/:id` con `{ "estado": "rechazada" }`
+2. La solicitud pasa a `rechazada` y el ejemplar vuelve al stock
+3. El panel confirma la operación
 
 ---
 
-#### CU-15: Ver Devoluciones del Dia
-| Campo | Descripcion |
+#### CU-15: Ver Devoluciones del Día
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Bibliotecario |
-| **Precondicion** | Panel cargado (seccion 2) |
-| **Disparador** | Carga automatica |
+| **Precondición** | Panel cargado |
+| **Disparador** | Carga automática |
 
 **Flujo Principal:**
-1. Consulta: `Prestamo WHERE estado='activo' AND fecha_devolucion_estimada = HOY`
-2. Tabla: Socio, Titulo, Vencimiento, Accion [Registrar devolucion]
+1. `GET /api/prestamos/proximos` devuelve los préstamos activos que vencen hoy o antes
+2. La tabla muestra Socio, Título, Vencimiento y la acción "Registrar devolución"
 
 ---
 
-#### CU-16: Registrar Devolucion Fisica
-| Campo | Descripcion |
+#### CU-16: Registrar Devolución Física
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Bibliotecario |
-| **Precondicion** | Prestamo activo, ejemplar fisico en mano |
-| **Disparador** | Click "Registrar devolucion" |
+| **Precondición** | Préstamo activo, ejemplar físico en mano |
+| **Disparador** | Click "Registrar devolución" |
 
 **Flujo Principal:**
-1. Actualiza Prestamo: estado='devuelto', fecha_devolucion_real=HOY
-2. Actualiza Ejemplar: estado='disponible'
-3. **Si fecha_devolucion_real > fecha_devolucion_estimada**: dispara RN-04 (crea Sancion + Notificacion)
-4. Muestra "Devolucion registrada"
+1. `PATCH /api/prestamos/:id` con `{ "estado": "devuelto" }`
+2. El préstamo pasa a `devuelto` con la fecha real
+3. El stock del libro se repone
+4. El panel se recarga
 
 **Flujos Alternativos:**
-- **A1: Ejemplar deteriorado** -> Bibliotecario marca "Deteriorado" -> dispara CU-19 (baja)
+- **A1: Préstamo no activo** -> `409 PRESTAMO_NO_ACTIVO`
 
 ---
 
 #### CU-17: Ver Socios Morosos
-| Campo | Descripcion |
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Bibliotecario |
-| **Precondicion** | Panel cargado (seccion 3) |
-| **Disparador** | Carga automatica |
+| **Precondición** | Panel cargado |
+| **Disparador** | Carga automática |
 
 **Flujo Principal:**
-1. Consulta: `Prestamo WHERE estado='activo' AND fecha_devolucion_estimada < HOY` (agrupado por socio)
-2. Tabla: Socio, Titulo, Dias_atraso, Accion [Enviar notificacion]
-3. Aplica RN-03 (pseudonimizacion menores)
+1. `GET /api/reportes/morosos` agrupa los préstamos activos con fecha límite anterior a hoy por socio
+2. `pages/reportes.html` muestra la tabla de socios morosos y el detalle de vencidos; cada vencido permite "Enviar notificación"
 
 ---
 
-#### CU-18: Enviar Notificacion a Moroso
-| Campo | Descripcion |
+#### CU-18: Enviar Notificación a Moroso
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Bibliotecario |
-| **Precondicion** | Socio con prestamo vencido |
-| **Disparador** | Click "Enviar notificacion" |
+| **Precondición** | Socio con préstamo vencido |
+| **Disparador** | Click "Enviar notificación" |
 
 **Flujo Principal:**
-1. Sistema genera Notificacion(tipo='moroso', mensaje='Tiene prestamo vencido: [titulo]. Por favor devuelva.')
-2. Marca como enviada (email/sistema interno/impresa)
-3. Registra en auditoria
+1. `POST /api/notificaciones` con `nroSocio`, `libroId` y motivo
+2. El servidor guarda la notificación como no leída
+3. El socio la ve en "Mi historial" y puede marcarla como leída
 
 ---
 
 #### CU-19: Dar de Baja Ejemplar Deteriorado
-| Campo | Descripcion |
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Bibliotecario |
-| **Precondicion** | Ejemplar en mal estado (identificado en devolucion o revision) |
-| **Disparador** | Click "Dar de baja ejemplar deteriorado" (seccion 4) |
+| **Precondición** | Libro con ejemplares registrados |
+| **Disparador** | Click "Dar de baja" en la tabla de inventario |
 
 **Flujo Principal:**
-1. Formulario: busca ejemplar por nro, confirma baja
-2. Actualiza Ejemplar: estado='baja', fecha_baja=HOY, motivo
-3. Si tenia prestamo activo -> error (debe devolverse primero)
-4. Actualiza conteo de inventario (dispara alerta si stock critico -> CU-24)
+1. El bibliotecario confirma la baja
+2. `POST /api/libros/:id/baja` descuenta un ejemplar del total y de los disponibles
+3. Se actualiza el inventario en pantalla
+
+**Flujos Alternativos:**
+- **A1: Sin ejemplares** -> `409 SIN_EJEMPLARES`
 
 **Reglas:** RN-07
 
 ---
 
 #### CU-20: Registrar Nuevo Ejemplar
-| Campo | Descripcion |
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Bibliotecario |
-| **Precondicion** | Libro existe en catalogo (ISBN registrado) |
-| **Disparador** | Click "Registrar nuevo ejemplar" |
+| **Precondición** | Libro existente en el catálogo |
+| **Disparador** | Click "Agregar ejemplar" |
 
 **Flujo Principal:**
-1. Formulario: ISBN (select libro existente), nro_ejemplar, ubicacion
-2. Crea Ejemplar: estado='disponible'
-3. Actualiza disponibilidad en catalogo (tiempo real)
+1. `POST /api/libros/:id/ejemplares` con la cantidad
+2. Aumentan `totalEjemplares` y `disponibles`
+3. El inventario se actualiza en pantalla
 
 ---
 
-#### CU-21: Generar Reporte Prestamos Vencidos
-| Campo | Descripcion |
+#### CU-21: Generar Reporte Préstamos Vencidos
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Bibliotecario |
-| **Precondicion** | Acceso a seccion reportes |
-| **Disparador** | Click "Generar reporte de prestamos vencidos" |
+| **Precondición** | Acceso al panel |
+| **Disparador** | Click "Generar reporte" |
 
 **Flujo Principal:**
-1. Genera PDF/CSV: listado completo prestamos vencidos (socio, titulo, dias_atraso, sancion)
-2. Descarga o impresion directa
+1. `GET /api/reportes/morosos` devuelve los datos en vivo, la agrupación por socio y la marca de tiempo
+2. `pages/reportes.html` muestra el resumen, los morosos agrupados y el detalle de vencidos
+3. El botón "Imprimir reporte" usa los estilos de impresión (solo la sección del reporte)
 
 ---
 
 #### CU-22: Ver Indicadores Generales (Director)
-| Campo | Descripcion |
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Director |
-| **Precondicion** | Autenticado como director, `tablero-director.html` |
-| **Disparador** | Carga de tablero (seccion 1) |
+| **Precondición** | Autenticado como director |
+| **Disparador** | Carga del tablero |
 
 **Flujo Principal:**
-1. Queries agregadas en tiempo real:
-   - Socios activos: `COUNT(DISTINCT socio WHERE estado_activo=1)`
-   - Prestamos vigentes: `COUNT(prestamo WHERE estado IN ('reservado','activo'))`
-   - Prestamos vencidos: `COUNT(prestamo WHERE estado='activo' AND fecha_dev_est < HOY)`
-   - Ejemplares en sala: `COUNT(ejemplar WHERE estado='en_sala')`
-   - Disponibles prestamo: `COUNT(ejemplar WHERE estado='disponible')`
-2. Muestra tabla de indicadores con valores numericos
+1. `GET /api/dashboard` calcula en el servidor:
+   - socios activos y socios con préstamos vigentes
+   - préstamos vigentes y vencidos
+   - títulos, ejemplares totales, ejemplares en sala y disponibles para préstamo
+2. La página muestra los ocho indicadores
 
 ---
 
-#### CU-23: Ver Ranking Categorias Mas Leidas
-| Campo | Descripcion |
+#### CU-23: Ver Ranking Categorías Más Leídas
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Director |
-| **Precondicion** | Tablero cargado (seccion 2) |
-| **Disparador** | Carga automatica |
+| **Precondición** | Tablero cargado |
+| **Disparador** | Carga automática |
 
 **Flujo Principal:**
-1. Query: `SELECT genero, COUNT(*) as prestamos FROM prestamo p JOIN ejemplar e ON p.ejemplar=e.nro JOIN libro l ON e.isbn=l.isbn WHERE p.fecha_reserva >= HOY-30d GROUP BY genero ORDER BY prestamos DESC`
-2. Tabla ranking: Categoria | Prestamos (ultimo mes)
+1. El servidor agrupa los préstamos por género del libro y ordena de mayor a menor
+2. La página muestra el top 5 de categorías
 
 ---
 
-#### CU-24: Ver Titulos Faltantes en Inventario
-| Campo | Descripcion |
+#### CU-24: Ver Títulos Faltantes en Inventario
+| Campo | Descripción |
 |-------|-------------|
 | **Actor Primario** | Director |
-| **Precondicion** | Tablero cargado (seccion 3) |
-| **Disparador** | Carga automatica |
+| **Precondición** | Tablero cargado |
+| **Disparador** | Carga automática |
 
 **Flujo Principal:**
-1. Query: Libros con `COUNT(ejemplar WHERE estado IN ('disponible','en_sala')) <= 1`
-2. Tabla: Titulo, Autor, Stock_actual (0 o 1)
-3. Uso: decision de compra/reposicion
+1. El servidor lista los libros no restringidos con 0 o 1 ejemplar disponible
+2. La página muestra Título, Autor y Stock actual
 
 ---
 
-#### CU-25: Navegacion Principal
-| Campo | Descripcion |
+#### CU-25: Navegación Principal
+| Campo | Descripción |
 |-------|-------------|
-| **Actores** | Todos (publico y autenticados) |
-| **Descripcion** | Menu `nav-principal` presente en todas las pantallas: Inicio, Login, Catalogo, Historial, Panel Bibliotecario, Tablero Director |
-| **Regla** | Opciones visibles segun autenticacion/rol (Hito 03: ocultar/mostrar via JS) |
+| **Actores** | Todos (público y autenticados) |
+| **Descripción** | La navbar se genera dinámicamente según la sesión y el rol. Visitante: Inicio y Login. Socio: Inicio, Catálogo, Mi historial y Cerrar sesión. Bibliotecario y director ven su pantalla de trabajo y el cierre de sesión. |
+| **Regla** | Opciones visibles según autenticación/rol, con enlace activo resaltado |
 
 ---
 
-#### CU-26: Autorizacion por Rol
-| Campo | Descripcion |
+#### CU-26: Autorización por Rol
+| Campo | Descripción |
 |-------|-------------|
 | **Actores** | Sistema (transversal) |
-| **Descripcion** | Control de acceso a nivel de ruta/pantalla:
-- `/pages/catalogo.html`, `/pages/reserva.html`, `/pages/confirmacion.html`, `/pages/historial.html` -> Require rol='socio'
-- `/pages/panel-bibliotecario.html` -> Require rol='bibliotecario'
-- `/pages/tablero-director.html` -> Require rol='director'
-- `/index.html`, `/pages/login.html` -> Publico |
-| **Implementacion Hito 02** | Simulada via HTML estatico; Hito 03: middleware express + JWT/session |
+| **Descripción** | Control de acceso en dos capas:
+- **API**: middleware `autenticar` + `autorizar(...)` en cada ruta
+- **Páginas**: el servidor redirige a `/pages/login.html` si no hay sesión y al inicio del rol si no corresponde |
+| **Rutas** | `/index.html` y `/pages/login.html` son públicas; el resto requiere sesión |
+| **Implementación** | Cookie `HttpOnly` + mapa de sesiones en memoria + guardas de página. Al redirigir al login se conserva la ruta original en `?volver=` |
 
 ---
 
-## 4. PANTALLAS DESARROLLADAS (Hito 02)
+#### CU-27: Consultar Disponibilidad Total del Catálogo
+| Campo | Descripción |
+|-------|-------------|
+| **Actor Primario** | Bibliotecario |
+| **Precondición** | Panel cargado |
+| **Disparador** | Carga automática de la sección de inventario |
 
-| # | Archivo | Descripcion | Casos de Use Cubiertos |
+**Flujo Principal:**
+1. `GET /api/libros` devuelve el catálogo completo con stock y estado
+2. El panel muestra total, disponibles, estado y las acciones de alta/baja
+
+---
+
+#### CU-28: Gestionar Cambios en Memoria
+| Campo | Descripción |
+|-------|-------------|
+| **Actores** | Sistema (transversal) |
+| **Descripción** | Toda operación que modifica datos (reserva, aprobación, rechazo, devolución, alta, baja, notificación, lectura) actualiza las estructuras en memoria del servidor antes de responder. No se escribe ningún archivo ni se usa una base de datos. |
+| **Beneficio** | Cualquier navegador ve el mismo estado mientras el servidor está en marcha; no se depende de `localStorage`. Al reiniciar se vuelve a la semilla. |
+
+---
+
+## 4. PANTALLAS DESARROLLADAS
+
+| # | Archivo | Descripción | Casos de Uso Cubiertos |
 |---|---------|-------------|------------------------|
-| 1 | `index.html` | Landing page: presentacion, 3 tarjetas rol, acceso login | CU-25 |
-| 2 | `pages/login.html` | Formulario usuario+clave+rol, submit simulado a index | CU-01 |
-| 3 | `pages/catalogo.html` | Buscador (texto, genero, solo disponibles) + grid resultados con badges estado | CU-03, CU-04, CU-05 |
-| 4 | `pages/reserva.html` | Formulario reserva (titulo, autor, ejemplar, socio, fecha_retiro) + avisos reglas | CU-06 |
-| 5 | `pages/confirmacion.html` | Comprobante digital con datos prestamo, fecha limite, enlaces navegacion | CU-07 |
-| 6 | `pages/historial.html` | 3 tablas: activos, devueltos, sanciones + aviso privacidad menores | CU-08, CU-09, CU-10, CU-11 |
-| 7 | `pages/panel-bibliotecario.html` | 4 secciones: solicitudes, devoluciones, morosos, reportes/inventario (botones grandes, alto contraste) | CU-12 a CU-21 |
-| 8 | `pages/tablero-director.html` | 3 secciones: indicadores, ranking categorias, titulos faltantes | CU-22, CU-23, CU-24 |
+| 1 | `index.html` | Landing pública: explicación de la biblioteca, libros más pedidos y panel de datos de la cuenta | CU-25 |
+| 2 | `pages/login.html` | Formulario usuario + contraseña, sesión real contra la API | CU-01 |
+| 3 | `pages/catalogo.html` | Buscador (texto, género, solo disponibles) contra la API y tarjetas con estado | CU-03, CU-04, CU-05 |
+| 4 | `pages/reserva.html` | Formulario de reserva con validaciones del servidor | CU-06 |
+| 5 | `pages/confirmacion.html` | Comprobante digital consultado por API, con impresión | CU-07 |
+| 6 | `pages/historial.html` | Reservas con ticket, préstamos activos, devueltos, sanciones y notificaciones | CU-08, CU-09, CU-10, CU-11 |
+| 7 | `pages/panel-bibliotecario.html` | Solicitudes (más recientes primero), devoluciones, alta de libros e inventario (alto contraste, botones grandes) | CU-12 a CU-16, CU-19, CU-20, CU-27 |
+| 8 | `pages/reportes.html` | Socios morosos agrupados y detalle de préstamos vencidos, con notificación e impresión | CU-17, CU-18, CU-21 |
+| 9 | `pages/tablero-director.html` | Indicadores, ranking de categorías y títulos faltantes | CU-22, CU-23, CU-24 |
+| 10 | `pages/libro.html` | Ficha del libro: datos completos, disponibilidad, reseñas de otros socios y formulario de reseña (1-5) | CU-03, CU-04, nuevo: reseñas |
 
 ---
 
 ## 5. ESTRUCTURA DEL PROYECTO
 
 ```
-Practicas_Profesionales/
-|-- index.html              (pagina principal - landing)
-|-- styles.css              (hoja de estilos base: tipografia, colores, flexbox, badges, tablas)
-|-- README.md               (este documento)
-|-- img/
-|   |-- logo-bibliotech.svg (logo vectorial propio)
+backend/
+|-- index.js              (servidor Express: API REST, sesiones, reglas y guardas)
+|-- package.json
+|-- package-lock.json
+|-- data/
+|   `-- semilla.json      (datos iniciales; se copian a memoria al arrancar)
+`-- test/
+    |-- api.test.js       (pruebas de la API)
+    `-- patch.test.js     (pruebas de actualizaciones PATCH)
+frontend/
+|-- index.html            (página principal - landing)
+|-- css/
+|   |-- styles.css        (estilos base, responsive e impresión)
+|   `-- biblio-admin.css  (tema de alto contraste para administración)
+|-- js/
+|   `-- scripts.js        (cliente de API, sesión, navbar y utilidades)
 |-- pages/
-    |-- login.html
-    |-- catalogo.html
-    |-- reserva.html
-    |-- confirmacion.html
-    |-- historial.html
-    |-- panel-bibliotecario.html
-    |-- tablero-director.html
+|   |-- login.html
+|   |-- catalogo.html
+|   |-- libro.html
+|   |-- reserva.html
+|   |-- confirmacion.html
+|   |-- historial.html
+|   |-- panel-bibliotecario.html
+|   |-- reportes.html
+|   `-- tablero-director.html
+`-- assets/
+    `-- img/
+        `-- logo-bibliotech.svg
+documentacion/
+|-- relevamiento.pdf      (relevamiento completo del sistema)
+|-- diagramas/
+|   `-- diagramas.md      (arquitectura, modelo de datos y flujos en Mermaid)
+`-- anotaciones.md        (decisiones y pendientes)
+README.md                 (este documento)
+.gitignore
+.env.example              (variables de entorno de referencia; copiar a .env)
 ```
+
+Los datos del sistema se guardan en **memoria** (arrays y objetos). No hay base
+de datos ni escritura en disco: al reiniciar el servidor se vuelve a
+`backend/data/semilla.json`.
+
+### Cómo levantar el proyecto
+
+Requisitos: Node.js 20.10 o superior (las pruebas usan `--test-concurrency`).
+
+**Opción A (recomendada): un solo proceso**
+
+El backend también sirve el frontend estático.
+
+```bash
+cd backend
+npm install
+npm start
+```
+
+Luego abrir <http://localhost:8080>. Para cambiar el puerto:
+`PORT=3000 npm start` (PowerShell: `$env:PORT=3000; npm start`).
+
+Desde la raíz del repositorio también se puede ejecutar `npm start`,
+`npm run dev` o `npm test`; esos scripts delegan en `backend/`.
+
+**Configuración opcional con `.env`**
+
+Copiar `.env.example` a `.env` **en la raíz del repositorio** y ajustar `PORT` o
+`BIBLIO_ORIGENES`. Luego levantar con:
+
+```bash
+cd backend
+npm run start:env
+```
+
+El archivo `.env` no se versiona. `npm start` no lee `.env`: para eso está
+`npm run start:env` (requiere Node.js 20.6 o superior). También se pueden
+definir las variables directamente en la terminal, como se muestra más abajo.
+
+**Opción B: frontend y backend como proyectos separados**
+
+1. Levantar el backend igual que en la opción A.
+2. Servir la carpeta `frontend/` con cualquier servidor estático (por ejemplo, la
+   extensión Live Server de VS Code en `http://localhost:5500`).
+
+El cliente detecta automáticamente que está en otro puerto y apunta la API a
+`http://localhost:8080/api`. Para usar otro host o puerto, definir
+`window.BIBLIO_API_URL = 'http://mi-servidor:8080/api'` antes de cargar
+`frontend/js/scripts.js`. El backend habilita CORS con credenciales para que la
+cookie de sesión funcione entre orígenes distintos. Por defecto acepta cualquier
+origen; para restringirlo, definir `BIBLIO_ORIGENES`:
+
+```bash
+BIBLIO_ORIGENES=http://localhost:5500 npm start
+```
+
+En PowerShell: `$env:BIBLIO_ORIGENES='http://localhost:5500'; npm start`.
+
+### Cómo probar la API
+
+```bash
+cd backend
+npm test
+```
+
+Las pruebas trabajan sobre la copia en memoria de la semilla y no modifican
+archivos: cada ejecución parte de los datos iniciales. Cubren autenticación, permisos por rol, catálogo, reservas, cupo,
+colecciones únicas, sin stock, privacidad de menores, aprobación, devolución,
+rechazo, inventario, notificaciones, reporte, tablero, guardas de página
+(incluido `HEAD` y `?volver=`), reseñas, edición y baja lógica de libros,
+validación de datos, cookies malformadas, tiempo de respuesta y 60 consultas
+concurrentes.
+
+### Credenciales de prueba
+
+Todas las cuentas usan la clave `1234`.
+
+| Usuario      | Rol           | Nombre              | Notas |
+|--------------|---------------|---------------------|-------|
+| `mgarcia`    | socio         | Mariana García      | Socio 1001, 2 préstamos activos |
+| `psuarez`    | socio         | Pablo Suárez        | Socio 1002, 3 compromisos y un préstamo vencido |
+| `lbenitez`   | socio         | Lucía Benítez       | Socio menor 1003 (privacidad de apellido) |
+| `blopez`     | bibliotecario | Beatriz López       | — |
+| `crodriguez` | bibliotecario | Carlos Rodríguez    | — |
+| `dperez`     | director      | Daniel Pérez        | — |
+| `mgomez`     | director      | María Gómez         | — |
+
+Las credenciales se documentan únicamente acá y no se muestran en la interfaz.
+Los cambios de la demo viven en memoria: al reiniciar el servidor se vuelve
+automáticamente a los datos iniciales de `backend/data/semilla.json`.
 
 ---
 
-## 6. TECNOLOGIAS UTILIZADAS (Hito 02)
+## 6. TECNOLOGÍAS UTILIZADAS
 
-- **HTML5 semantico**: `<header>`, `<nav>`, `<main>`, `<footer>`, `<section>`, `<article>`, `<aside>`, `<fieldset>`, `<legend>`, `<table>` con `<caption>`/`<thead>`/`<tbody>`, encabezados jerarquicos (h1-h3), atributos ARIA (`role="alert"`, `role="status"`, `aria-label`)
-- **CSS basico externo** (`styles.css`):
-  - Variables CSS (custom properties) para colores, espaciado, tipografia
-  - Flexbox para navbar, grid de tarjetas roles, layout de catalogo
-  - Clases utilitarias `.boton`, `.boton-secundario`, `.etiqueta`, `.etiqueta-activo`, `.etiqueta-devuelto`, `.etiqueta-sala`, `.aviso`, `.aviso-exito`, `.aviso-error`
-  - Accesibilidad: focus-visible, contraste AA, tamano fuente base 1rem, line-height 1.6
-- **Formularios HTML** con `action` + `method="get"` para simulacion de navegacion entre pantallas (sin backend)
-- **Navegacion consistente**: `nav-principal` replicado en todas las paginas
+- **Backend Node.js + Express 5** (`backend/index.js`)
+  - API REST con rutas por recurso y respuestas JSON
+  - Sesiones en memoria con cookie `HttpOnly`, `SameSite=Lax`
+  - Middlewares de autenticación y autorización por rol
+  - Validación de reglas de negocio y errores con códigos propios
+  - Datos en memoria (arrays y objetos) reiniciados desde la semilla
+  - CORS con credenciales para ejecutar el frontend por separado
+  - Guardas de página del lado del servidor
+  - Registro de tiempos de respuesta de la API
+- **Frontend sin frameworks**
+  - HTML5 semántico: `<header>`, `<nav>`, `<main>`, `<section>`, `<table>` con `<caption>`/`<thead>`/`<tbody>`, `aria-live`, `role="alert"`
+  - CSS externo con Flexbox, utilidades (`.boton`, `.etiqueta`, `.aviso`), responsive en 1024/768/480 px y estilos de impresión
+  - `frontend/js/scripts.js`: cliente `fetch` centralizado, control de sesión, navbar dinámica, avisos y utilidades de fecha
+  - Sin `localStorage`: todo el estado se consulta y se modifica a través de la API
+  - Indicador global de carga y exportación del reporte de vencidos a CSV
+- **Pruebas**: `node:test` + `node:assert/strict` sobre los datos en memoria
+
+---
+
+## 7. API REST
+
+Base: `http://localhost:8080/api`. Todas las rutas requieren sesión salvo
+`GET /health`, `GET /config`, `POST /auth/login` y `GET /libros/populares`.
+
+| Método | Ruta | Rol | Descripción |
+|--------|------|-----|-------------|
+| GET | `/health` | público | Estado del servidor y versión |
+| GET | `/config` | público | Configuración (días de préstamo, máximo, nombre) |
+| POST | `/auth/login` | público | Inicia sesión y entrega la cookie |
+| POST | `/auth/logout` | autenticado | Cierra la sesión |
+| GET | `/auth/me` | autenticado | Datos del usuario de la sesión |
+| GET | `/libros` | autenticado | Catálogo con filtros `buscar`, `genero`, `disponible` |
+| GET | `/libros/populares` | público | Los 6 libros más pedidos (préstamos + solicitudes no rechazadas) |
+| GET | `/libros/:id` | autenticado | Detalle de un libro activo |
+| POST | `/libros` | bibliotecario | Alta de libro |
+| PUT | `/libros/:id` | bibliotecario | Edita título, autor, género, año, descripción y `soloSala` |
+| DELETE | `/libros/:id` | bibliotecario | Baja lógica (`eliminado: true`), conserva el historial |
+| GET | `/libros/:id/resenias` | autenticado | Reseñas del libro con promedio y total |
+| POST | `/libros/:id/resenias` | socio | Crea o actualiza la reseña propia (puntuación 1-5 + comentario) |
+| POST | `/libros/:id/ejemplares` | bibliotecario | Agrega ejemplares |
+| POST | `/libros/:id/baja` | bibliotecario | Quita un ejemplar (baja de cantidad) |
+| POST | `/solicitudes` | socio | Crea una reserva |
+| GET | `/solicitudes` | bibliotecario | Lista solicitudes por estado, de la más reciente a la más antigua |
+| GET | `/solicitudes/mias` | socio | Reservas propias para consultar el ticket |
+| GET | `/solicitudes/:id` | socio dueño / bibliotecario | Detalle de una solicitud |
+| PATCH | `/solicitudes/:id` | bibliotecario | Cambia el estado a `aprobada` o `rechazada` |
+| POST | `/solicitudes/:id/aprobar` | bibliotecario | Alias de acción: aprueba la entrega y crea el préstamo |
+| POST | `/solicitudes/:id/rechazar` | bibliotecario | Alias de acción: rechaza y repone stock |
+| GET | `/prestamos/mios` | socio | Préstamos activos, devueltos y sanciones |
+| GET | `/prestamos` | bibliotecario | Préstamos activos |
+| GET | `/prestamos/vencidos` | bibliotecario / director | Reporte de vencidos |
+| GET | `/reportes/morosos` | bibliotecario / director | Morosos agrupados por socio y detalle de vencidos |
+| GET | `/prestamos/proximos` | bibliotecario | Devoluciones de hoy o anteriores |
+| PATCH | `/prestamos/:id` | bibliotecario | Cambia el estado a `devuelto` y repone stock |
+| POST | `/prestamos/:id/devolucion` | bibliotecario | Alias de acción: registra devolución y repone stock |
+| POST | `/notificaciones` | bibliotecario | Envía notificación a un socio |
+| GET | `/notificaciones/mias` | socio | Notificaciones del socio |
+| PATCH | `/notificaciones/:id` | socio | Marca una notificación como leída (`{ "leida": true }`) |
+| POST | `/notificaciones/:id/leida` | socio | Alias de acción: marca una notificación como leída |
+| GET | `/dashboard` | director | Indicadores, categorías y faltantes |
+
+Códigos de error principales: `NO_AUTENTICADO` (401), `SIN_PERMISO` (403),
+`CREDENCIALES_INVALIDAS` (401), `LIBRO_NO_ENCONTRADO` (404), `SIN_STOCK` (409),
+`CUPO_EXCEDIDO` (409), `LIBRO_SOLO_SALA` (409), `SOLICITUD_NO_PENDIENTE` (409),
+`PRESTAMO_NO_ACTIVO` (409).
+
+---
+
+## 8. FUNCIONAMIENTO GENERAL
+
+1. El navegador carga el frontend desde Express.
+2. `frontend/js/scripts.js` consulta `GET /api/auth/me` para conocer la sesión.
+3. El login llama a `POST /api/auth/login`; el servidor responde con la cookie
+   `biblio_sesion` y el frontend redirige según el rol.
+4. La navbar y los accesos se arman según el rol.
+5. Cada operación (reservar, aprobar, devolver, notificar, alta/baja) se ejecuta
+   contra la API y el servidor actualiza sus estructuras en memoria antes de
+   responder. No se escribe en disco: al reiniciar se vuelve a la semilla.
+6. El panel del bibliotecario se actualiza automáticamente cada 15 segundos.
+
+> La autenticación usa contraseñas en texto plano por tratarse de un prototipo
+> académico. Para producción corresponde hashear las claves, usar sesiones
+> persistidas o JWT, agregar HTTPS y limitar intentos de login.
+
+Para más detalle ver `documentacion/anotaciones.md` y
+`documentacion/diagramas/diagramas.md`.

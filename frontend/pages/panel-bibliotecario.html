@@ -1,0 +1,516 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTech - Panel del bibliotecario</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/biblio-admin.css">
+    <script src="../js/scripts.js"></script>
+</head>
+<body>
+    <header class="header-principal">
+        <a href="/index.html" class="enlace-logo" aria-label="BiblioTech - Ir al inicio"><img src="../assets/img/logo-bibliotech.svg" alt="Logo BiblioTech" class="logo"></a>
+        <div>
+            <h1 class="titulo-sitio">BiblioTech - Administración</h1>
+            <p class="subtitulo-sitio">Biblioteca Provincial "Manuel Belgrano"</p>
+        </div>
+    </header>
+
+    <nav class="nav-principal" aria-label="Navegación principal">
+        <a href="../index.html">Inicio</a>
+        <a href="panel-bibliotecario.html">Panel bibliotecario</a>
+        <a href="reportes.html">Reportes</a>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Panel del bibliotecario</h2>
+            <p>
+                Vista de atención al mostrador. Esta interfaz usa botones
+                grandes y alto contraste para facilitar el trabajo de los
+                voluntarios mayores con visión reducida. Los socios morosos
+                y los préstamos vencidos se consultan en la sección
+                <a href="reportes.html">Reportes</a>.
+            </p>
+            <div class="barra-acciones no-imprimir">
+                <button type="button" class="boton boton-secundario" id="btn-actualizar">Actualizar ahora</button>
+                <span class="meta" id="ultima-actualizacion" aria-live="polite"></span>
+            </div>
+        </section>
+
+        <section>
+            <h3>Solicitudes de préstamo pendientes</h3>
+            <table>
+                <caption>Reservas que esperan aprobación de entrega · ordenadas de la más reciente a la más antigua</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Socio</th>
+                        <th scope="col">Título</th>
+                        <th scope="col">Solicitado</th>
+                        <th scope="col">Retiro</th>
+                        <th scope="col">Vencimiento</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-solicitudes">
+                    <!-- Carga dinámica -->
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h3>Devoluciones del día</h3>
+            <table>
+                <caption>Libros que deben recibirse hoy en el mostrador</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Socio</th>
+                        <th scope="col">Título</th>
+                        <th scope="col">Vencimiento</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-devoluciones">
+                    <!-- Carga dinámica -->
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h3>Agregar libro nuevo</h3>
+            <p>
+                Registrá un título que todavía no esté en el catálogo. El
+                libro queda disponible para los socios según los ejemplares
+                y la modalidad de consulta que indiques.
+            </p>
+            <div class="barra-acciones no-imprimir">
+                <button type="button" class="boton" id="btn-mostrar-alta">Agregar libro nuevo</button>
+            </div>
+            <form id="form-alta-libro" hidden>
+                <fieldset>
+                    <legend>Datos del libro</legend>
+
+                    <label for="nuevo-titulo">Título</label>
+                    <input type="text" id="nuevo-titulo" name="titulo" required maxlength="200">
+
+                    <label for="nuevo-autor">Autor</label>
+                    <input type="text" id="nuevo-autor" name="autor" required maxlength="150">
+
+                    <label for="nuevo-genero">Género</label>
+                    <input type="text" id="nuevo-genero" name="genero" required maxlength="80"
+                           placeholder="Ej: novela, cuento, ciencia">
+
+                    <label for="nuevo-anio">Año</label>
+                    <input type="number" id="nuevo-anio" name="anio" min="1000" max="2100">
+
+                    <label for="nuevo-ejemplares">Total de ejemplares</label>
+                    <input type="number" id="nuevo-ejemplares" name="totalEjemplares"
+                           min="1" max="9999" value="1" required>
+
+                    <label for="nuevo-solo-sala">Solo consulta en sala</label>
+                    <input type="checkbox" id="nuevo-solo-sala" name="soloSala">
+
+                    <label for="nuevo-descripcion">Descripción</label>
+                    <textarea id="nuevo-descripcion" name="descripcion" rows="3" maxlength="500"></textarea>
+                </fieldset>
+
+                <p>
+                    <button type="submit" class="boton">Guardar libro</button>
+                    <button type="button" class="boton boton-secundario" id="btn-cancelar-alta">Cancelar</button>
+                </p>
+            </form>
+        </section>
+
+        <section>
+            <h3>Disponibilidad total del catálogo</h3>
+            <table>
+                <caption>Inventario unificado de la biblioteca</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Título</th>
+                        <th scope="col">Autor</th>
+                        <th scope="col">Total</th>
+                        <th scope="col">Disponibles</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-catalogo">
+                    <!-- Carga dinámica -->
+                </tbody>
+            </table>
+        </section>
+
+        <dialog id="dialog-editar-libro" aria-labelledby="titulo-dialog-editar">
+            <form id="form-editar-libro">
+                <h3 id="titulo-dialog-editar">Editar libro</h3>
+                <input type="hidden" id="editar-id">
+
+                <label for="editar-titulo">Título</label>
+                <input type="text" id="editar-titulo" name="titulo" required maxlength="200">
+
+                <label for="editar-autor">Autor</label>
+                <input type="text" id="editar-autor" name="autor" required maxlength="150">
+
+                <label for="editar-genero">Género</label>
+                <input type="text" id="editar-genero" name="genero" required maxlength="80">
+
+                <label for="editar-anio">Año</label>
+                <input type="number" id="editar-anio" name="anio" min="1000" max="2100">
+
+                <label for="editar-descripcion">Descripción</label>
+                <textarea id="editar-descripcion" name="descripcion" rows="4" maxlength="1000"></textarea>
+
+                <label for="editar-solo-sala">Solo consulta en sala</label>
+                <input type="checkbox" id="editar-solo-sala" name="soloSala">
+
+                <p>
+                    <button type="submit" class="boton">Guardar cambios</button>
+                    <button type="button" class="boton boton-secundario" id="btn-cancelar-editar">Cancelar</button>
+                </p>
+            </form>
+        </dialog>
+
+        <aside>
+            <strong>Privacidad:</strong> los préstamos a socios menores de edad
+            se muestran solo con el nombre de pila. El apellido y la dirección
+            nunca se envían al panel; la protección se aplica en el servidor.
+        </aside>
+    </main>
+
+    <script>
+        let temporizador = null;
+        let librosActuales = [];
+
+        async function cargarPanel() {
+            const usuario = await BiblioTech.requerirSesion('bibliotecario');
+            if (!usuario) return;
+
+            try {
+                const [solicitudes, proximos, catalogo] = await Promise.all([
+                    BiblioTech.api('/solicitudes'),
+                    BiblioTech.api('/prestamos/proximos'),
+                    BiblioTech.api('/libros')
+                ]);
+
+                librosActuales = catalogo.libros;
+                renderizarSolicitudes(solicitudes.solicitudes);
+                renderizarDevoluciones(proximos.prestamos);
+                renderizarCatalogo(catalogo.libros);
+
+                document.getElementById('ultima-actualizacion').textContent =
+                    `Última actualización: ${new Date().toLocaleTimeString('es-AR')}`;
+            } catch (error) {
+                BiblioTech.mostrarAviso(error.message, 'error');
+            }
+        }
+
+        function renderizarSolicitudes(solicitudes) {
+            const tbody = document.getElementById('tbody-solicitudes');
+            tbody.innerHTML = '';
+
+            if (solicitudes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="celda-vacia">No hay solicitudes pendientes.</td></tr>';
+                return;
+            }
+
+            solicitudes.forEach((solicitud) => {
+                const libro = solicitud.libro || {};
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${BiblioTech.escaparHtml(solicitud.nombreVisible)}</td>
+                    <td>${BiblioTech.escaparHtml(libro.titulo || 'Desconocido')}</td>
+                    <td>${BiblioTech.escaparHtml(solicitud.fechaSolicitud)}</td>
+                    <td>${BiblioTech.escaparHtml(solicitud.fechaRetiro)}</td>
+                    <td>${BiblioTech.escaparHtml(solicitud.fechaDevolucion)}</td>
+                    <td class="acciones">
+                        <button type="button" class="boton" data-accion="aprobar" data-id="${solicitud.id}" data-titulo="${BiblioTech.escaparHtml(libro.titulo || 'el libro')}">Aprobar entrega</button>
+                        <button type="button" class="boton boton-secundario" data-accion="rechazar" data-id="${solicitud.id}" data-titulo="${BiblioTech.escaparHtml(libro.titulo || 'el libro')}">Rechazar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderizarDevoluciones(prestamos) {
+            const tbody = document.getElementById('tbody-devoluciones');
+            tbody.innerHTML = '';
+
+            const paraHoy = prestamos.filter((prestamo) => !prestamo.vencido);
+
+            if (paraHoy.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="celda-vacia">No hay devoluciones programadas para hoy.</td></tr>';
+                return;
+            }
+
+            paraHoy.forEach((prestamo) => {
+                const libro = prestamo.libro || {};
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${BiblioTech.escaparHtml(prestamo.nombreVisible)}</td>
+                    <td>${BiblioTech.escaparHtml(libro.titulo || 'Desconocido')}</td>
+                    <td>${BiblioTech.escaparHtml(prestamo.fechaDevolucion)}</td>
+                    <td class="acciones">
+                        <button type="button" class="boton" data-accion="devolver" data-id="${prestamo.id}" data-titulo="${BiblioTech.escaparHtml(libro.titulo || 'el libro')}">Registrar devolución</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderizarCatalogo(libros) {
+            const tbody = document.getElementById('tbody-catalogo');
+            tbody.innerHTML = '';
+
+            if (libros.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="celda-vacia">El catálogo está vacío.</td></tr>';
+                return;
+            }
+
+            libros.forEach((libro) => {
+                let estadoHtml = '<span class="etiqueta etiqueta-activo">Disponible</span>';
+                if (libro.soloSala) {
+                    estadoHtml = '<span class="etiqueta etiqueta-sala">Solo sala</span>';
+                } else if (libro.disponibles === 0) {
+                    estadoHtml = '<span class="etiqueta etiqueta-moroso">Sin stock</span>';
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${BiblioTech.escaparHtml(libro.titulo)}</td>
+                    <td>${BiblioTech.escaparHtml(libro.autor)}</td>
+                    <td>${libro.totalEjemplares}</td>
+                    <td>${libro.disponibles}</td>
+                    <td>${estadoHtml}</td>
+                    <td class="acciones">
+                        <button type="button" class="boton boton-secundario" data-accion="editar" data-libro="${libro.id}">Editar</button>
+                        <button type="button" class="boton" data-accion="alta" data-libro="${libro.id}" data-titulo="${BiblioTech.escaparHtml(libro.titulo)}">Agregar ejemplar</button>
+                        <button type="button" class="boton boton-secundario" data-accion="baja" data-libro="${libro.id}" data-titulo="${BiblioTech.escaparHtml(libro.titulo)}">Bajar cantidad</button>
+                        <button type="button" class="boton boton-peligro" data-accion="eliminar" data-libro="${libro.id}" data-titulo="${BiblioTech.escaparHtml(libro.titulo)}">Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        const dialogEditar = document.getElementById('dialog-editar-libro');
+        const formEditar = document.getElementById('form-editar-libro');
+
+        function abrirEditor(libroId) {
+            const libro = librosActuales.find((item) => item.id === Number(libroId));
+            if (!libro) return;
+
+            formEditar.querySelectorAll('.aviso-dinamico').forEach((aviso) => aviso.remove());
+
+            document.getElementById('editar-id').value = libro.id;
+            document.getElementById('editar-titulo').value = libro.titulo;
+            document.getElementById('editar-autor').value = libro.autor;
+            document.getElementById('editar-genero').value = libro.genero;
+            document.getElementById('editar-anio').value = libro.anio || '';
+            document.getElementById('editar-descripcion').value = libro.descripcion || '';
+            document.getElementById('editar-solo-sala').checked = Boolean(libro.soloSala);
+
+            dialogEditar.showModal();
+            document.getElementById('editar-titulo').focus();
+        }
+
+        function cerrarEditor() {
+            formEditar.reset();
+            dialogEditar.close();
+        }
+
+        async function guardarEdicion(evento) {
+            evento.preventDefault();
+
+            const id = document.getElementById('editar-id').value;
+            const datos = {
+                titulo: document.getElementById('editar-titulo').value.trim(),
+                autor: document.getElementById('editar-autor').value.trim(),
+                genero: document.getElementById('editar-genero').value.trim(),
+                anio: Number(document.getElementById('editar-anio').value) || null,
+                descripcion: document.getElementById('editar-descripcion').value.trim(),
+                soloSala: document.getElementById('editar-solo-sala').checked
+            };
+
+            if (!datos.titulo || !datos.autor || !datos.genero) {
+                BiblioTech.mostrarAviso('Título, autor y género son obligatorios.', 'error', formEditar);
+                return;
+            }
+
+            const boton = formEditar.querySelector('button[type="submit"]');
+            boton.disabled = true;
+            boton.textContent = 'Guardando...';
+
+            try {
+                await BiblioTech.api(`/libros/${id}`, { metodo: 'PUT', cuerpo: datos });
+                BiblioTech.mostrarAviso(`Libro "${datos.titulo}" actualizado correctamente.`, 'exito');
+                cerrarEditor();
+                await cargarPanel();
+            } catch (error) {
+                BiblioTech.mostrarAviso(error.message, 'error', formEditar);
+            } finally {
+                boton.disabled = false;
+                boton.textContent = 'Guardar cambios';
+            }
+        }
+
+        async function ejecutarAccion(boton) {
+            const { accion, id, libro, titulo } = boton.dataset;
+
+            if (accion === 'editar') {
+                abrirEditor(libro);
+                return;
+            }
+
+            const confirmaciones = {
+                aprobar: `¿Estás seguro de aprobar la entrega de "${titulo}"?`,
+                rechazar: `¿Estás seguro de rechazar la solicitud de "${titulo}"? El ejemplar volverá al stock.`,
+                devolver: `¿Estás seguro de registrar la devolución de "${titulo}"?`,
+                alta: `¿Estás seguro de agregar un ejemplar de "${titulo}" al inventario?`,
+                baja: `¿Estás seguro de bajar la cantidad de ejemplares de "${titulo}"?`,
+                eliminar: `¿Estás seguro de eliminar "${titulo}" del catálogo? Dejará de aparecer en la lista, pero se conservará el historial de préstamos.`
+            };
+
+            if (confirmaciones[accion] && !BiblioTech.confirmarAccion(confirmaciones[accion])) {
+                return;
+            }
+
+            boton.disabled = true;
+
+            try {
+                switch (accion) {
+                    case 'aprobar':
+                        await BiblioTech.api(`/solicitudes/${id}`, {
+                            metodo: 'PATCH',
+                            cuerpo: { estado: 'aprobada' }
+                        });
+                        BiblioTech.mostrarAviso('Entrega aprobada correctamente.', 'exito');
+                        break;
+                    case 'rechazar':
+                        await BiblioTech.api(`/solicitudes/${id}`, {
+                            metodo: 'PATCH',
+                            cuerpo: { estado: 'rechazada' }
+                        });
+                        BiblioTech.mostrarAviso('Solicitud rechazada. El ejemplar volvió al stock.', 'exito');
+                        break;
+                    case 'devolver':
+                        await BiblioTech.api(`/prestamos/${id}`, {
+                            metodo: 'PATCH',
+                            cuerpo: { estado: 'devuelto' }
+                        });
+                        BiblioTech.mostrarAviso('Devolución registrada correctamente.', 'exito');
+                        break;
+                    case 'alta':
+                        await BiblioTech.api(`/libros/${libro}/ejemplares`, {
+                            metodo: 'POST',
+                            cuerpo: { cantidad: 1 }
+                        });
+                        BiblioTech.mostrarAviso('Ejemplar registrado en el inventario.', 'exito');
+                        break;
+                    case 'baja':
+                        await BiblioTech.api(`/libros/${libro}/baja`, {
+                            metodo: 'POST',
+                            cuerpo: { motivo: 'Ajuste de cantidad' }
+                        });
+                        BiblioTech.mostrarAviso('Cantidad de ejemplares reducida.', 'exito');
+                        break;
+                    case 'eliminar':
+                        await BiblioTech.api(`/libros/${libro}`, { metodo: 'DELETE' });
+                        BiblioTech.mostrarAviso(`Libro "${titulo}" eliminado del catálogo.`, 'exito');
+                        break;
+                }
+
+                await cargarPanel();
+            } catch (error) {
+                BiblioTech.mostrarAviso(error.message, 'error');
+                boton.disabled = false;
+            }
+        }
+
+        const formAltaLibro = document.getElementById('form-alta-libro');
+        const btnMostrarAlta = document.getElementById('btn-mostrar-alta');
+
+        function mostrarFormularioAlta() {
+            formAltaLibro.hidden = false;
+            btnMostrarAlta.hidden = true;
+            document.getElementById('nuevo-titulo').focus();
+        }
+
+        function ocultarFormularioAlta() {
+            formAltaLibro.reset();
+            formAltaLibro.hidden = true;
+            btnMostrarAlta.hidden = false;
+        }
+
+        async function guardarLibroNuevo(evento) {
+            evento.preventDefault();
+
+            const datos = {
+                titulo: document.getElementById('nuevo-titulo').value.trim(),
+                autor: document.getElementById('nuevo-autor').value.trim(),
+                genero: document.getElementById('nuevo-genero').value.trim(),
+                anio: Number(document.getElementById('nuevo-anio').value) || null,
+                totalEjemplares: Number(document.getElementById('nuevo-ejemplares').value) || 1,
+                soloSala: document.getElementById('nuevo-solo-sala').checked,
+                descripcion: document.getElementById('nuevo-descripcion').value.trim()
+            };
+
+            if (!datos.titulo || !datos.autor || !datos.genero) {
+                BiblioTech.mostrarAviso('Título, autor y género son obligatorios.', 'error', formAltaLibro);
+                return;
+            }
+
+            if (!BiblioTech.confirmarAccion(`¿Estás seguro de agregar "${datos.titulo}" al catálogo?`)) {
+                return;
+            }
+
+            const boton = formAltaLibro.querySelector('button[type="submit"]');
+            boton.disabled = true;
+            boton.textContent = 'Guardando...';
+
+            try {
+                await BiblioTech.api('/libros', { metodo: 'POST', cuerpo: datos });
+                BiblioTech.mostrarAviso(`Libro "${datos.titulo}" agregado al catálogo.`, 'exito');
+                ocultarFormularioAlta();
+                await cargarPanel();
+            } catch (error) {
+                BiblioTech.mostrarAviso(error.message, 'error', formAltaLibro);
+            } finally {
+                boton.disabled = false;
+                boton.textContent = 'Guardar libro';
+            }
+        }
+
+        document.addEventListener('click', (evento) => {
+            const boton = evento.target.closest('button[data-accion]');
+            if (boton) ejecutarAccion(boton);
+        });
+
+        document.getElementById('btn-actualizar').addEventListener('click', cargarPanel);
+        btnMostrarAlta.addEventListener('click', mostrarFormularioAlta);
+        document.getElementById('btn-cancelar-alta').addEventListener('click', ocultarFormularioAlta);
+        formAltaLibro.addEventListener('submit', guardarLibroNuevo);
+        document.getElementById('btn-cancelar-editar').addEventListener('click', cerrarEditor);
+        formEditar.addEventListener('submit', guardarEdicion);
+        dialogEditar.addEventListener('cancel', (evento) => {
+            evento.preventDefault();
+            cerrarEditor();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarPanel();
+            temporizador = setInterval(cargarPanel, 15000);
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (temporizador) clearInterval(temporizador);
+        });
+    </script>
+
+    <footer class="footer-principal">
+        <p>BiblioTech &middot; Biblioteca Provincial "Manuel Belgrano" &middot;
+           Grupo 7 &middot; v<span data-version>2.0.0</span></p>
+    </footer>
+</body>
+</html>
