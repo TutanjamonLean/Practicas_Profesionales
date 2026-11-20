@@ -9,10 +9,28 @@
 // COMUNICACIÓN CON LA API
 // ============================================
 
-// Permite apuntar a un backend en otro host/puerto (por ejemplo, al abrir el
-// frontend con Live Server). Por defecto usa el mismo origen.
+/**
+ * Normaliza la URL del backend configurada por el usuario.
+ * Acepta "https://host" o "https://host/api" y siempre devuelve la base
+ * terminada en "/api" y sin barra final.
+ * @param {string} url
+ * @returns {string} URL normalizada, o '' si no hay URL configurada.
+ */
+function normalizarUrlApi(url) {
+  const limpia = String(url || '').trim().replace(/\/+$/, '');
+  if (!limpia) return '';
+  return /\/api$/i.test(limpia) ? limpia : `${limpia}/api`;
+}
+
+// URL del backend. Se configura en js/config.js (window.BIBLIO_CONFIG.API_URL)
+// cuando el frontend se publica como sitio separado (por ejemplo, un Static
+// Site de Render). Si queda vacía se usa el mismo origen; también se mantiene
+// window.BIBLIO_API_URL por compatibilidad con la configuración anterior.
 const API_BASE = (() => {
-  if (window.BIBLIO_API_URL) return window.BIBLIO_API_URL;
+  const configurada = normalizarUrlApi(
+    (window.BIBLIO_CONFIG && window.BIBLIO_CONFIG.API_URL) || window.BIBLIO_API_URL
+  );
+  if (configurada) return configurada;
   if (window.location.protocol === 'file:') return 'http://localhost:8080/api';
   if (window.location.port && window.location.port !== '8080') {
     return `${window.location.protocol}//${window.location.hostname}:8080/api`;

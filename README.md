@@ -705,6 +705,7 @@ frontend/
 |   |-- styles.css        (estilos base, responsive e impresión)
 |   `-- biblio-admin.css  (tema de alto contraste para administración)
 |-- js/
+|   |-- config.js         (URL del backend; vacía = mismo origen)
 |   `-- scripts.js        (cliente de API, sesión, navbar y utilidades)
 |-- pages/
 |   |-- login.html
@@ -774,7 +775,8 @@ definir las variables directamente en la terminal, como se muestra más abajo.
    extensión Live Server de VS Code en `http://localhost:5500`).
 
 El cliente detecta automáticamente que está en otro puerto y apunta la API a
-`http://localhost:8080/api`. Para usar otro host o puerto, definir
+`http://localhost:8080/api`. Para usar otro host o puerto, configurar `API_URL`
+en `frontend/js/config.js` (recomendado) o definir
 `window.BIBLIO_API_URL = 'http://mi-servidor:8080/api'` antes de cargar
 `frontend/js/scripts.js`. El backend habilita CORS con credenciales para que la
 cookie de sesión funcione entre orígenes distintos. Por defecto acepta cualquier
@@ -785,6 +787,72 @@ BIBLIO_ORIGENES=http://localhost:5500 npm start
 ```
 
 En PowerShell: `$env:BIBLIO_ORIGENES='http://localhost:5500'; npm start`.
+
+### Despliegue en Render
+
+El proyecto no necesita paso de build: el backend es Node.js + Express y el
+frontend es HTML/CSS/JS estático servido por `express.static`.
+
+**Opción A (recomendada): un único Web Service**
+
+1. Render → **New +** → **Web Service** y elegir este repositorio.
+2. Configurar:
+   - **Root Directory**: `backend`
+   - **Build Command**: `npm ci` (o `npm install`)
+   - **Start Command**: `npm start`
+   - **Health Check Path**: `/api/health`
+   - **Instance Type**: Free (o el que corresponda)
+3. No definir `PORT`: Render la inyecta y el servidor ya la lee
+   (`Number(process.env.PORT) || 8080`).
+4. Opcional: `NODE_VERSION=22` (el proyecto requiere Node.js 20.10 o superior).
+5. Dejar `frontend/js/config.js` con `API_URL: ''` (mismo origen).
+6. La URL del servicio sirve el frontend y la API (`/api`). En este caso no hay
+   que configurar CORS: frontend y API comparten origen.
+
+**Opción B: frontend como Static Site aparte**
+
+1. Crear el Web Service del backend como en la Opción A.
+2. Render → **New +** → **Static Site**, con:
+   - **Root Directory**: `frontend`
+   - **Build Command**: vacío (no hay build)
+   - **Publish Directory**: `.`
+3. En `frontend/js/config.js`, pegar la URL real del backend en `API_URL`
+   (con o sin `/api`; el cliente la normaliza):
+
+   ```js
+   window.BIBLIO_CONFIG = {
+     API_URL: 'https://<nombre-del-backend>.onrender.com'
+   };
+   ```
+
+   Reemplazar `<nombre-del-backend>` por el dominio que muestra Render. El
+   archivo se versiona, así que después hay que hacer commit y push.
+4. En el **Web Service** (backend) agregar la variable de entorno
+   `BIBLIO_ORIGENES=https://<nombre-del-frontend>.onrender.com`, con el dominio
+   real del Static Site y sin barra final.
+5. La cookie de sesión se emite como `SameSite=None; Secure` cuando la petición
+   llega por HTTPS, para que viaje entre dominios distintos.
+
+Advertencias de la Opción B: Safari/iOS bloquea cookies de terceros (el login
+puede no persistir); en el Static Site no se ejecutan las guardas de servidor de
+`/pages/*.html` (la protección sigue en `requerirSesion()` del cliente y en la
+API); y el plan free de Render suspende el backend tras 15 minutos sin tráfico,
+por lo que la primera petición puede tardar.
+
+En ambas opciones los datos son en memoria: cada reinicio o deploy vuelve a
+`backend/data/semilla.json`.
+
+**Verificación después del deploy**
+
+1. `https://<backend>.onrender.com/api/health` debe responder
+   `{"estado":"ok", ...}`.
+2. Abrir el frontend e iniciar sesión. En DevTools → Network,
+   `POST /api/auth/login` debe responder 200 y, en la Opción B,
+   `Access-Control-Allow-Origin` debe coincidir con el dominio del frontend.
+3. En DevTools → Application → Cookies, `biblio_sesion` debe estar presente con
+   `HttpOnly` y `Secure`.
+4. Recargar una página protegida: `GET /api/auth/me` debe responder 200 (la
+   sesión persiste).
 
 ### Cómo probar la API
 

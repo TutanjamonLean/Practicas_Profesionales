@@ -306,7 +306,27 @@ function usuarioDeSesion(req) {
   return datos.usuarios.find((usuario) => usuario.id === sesion.usuarioId) || null;
 }
 
-function crearSesion(res, usuario) {
+/**
+ * Atributos de la cookie de sesión según el protocolo de la petición.
+ *
+ * En HTTP (desarrollo local) se usa SameSite=Lax. Cuando la petición llega
+ * por HTTPS (por ejemplo, en Render) se usa SameSite=None; Secure, que es lo
+ * que exigen los navegadores para enviar la cookie cuando el frontend y el
+ * backend están publicados en dominios distintos.
+ */
+function atributosCookie(req) {
+  const proto = String(req.headers['x-forwarded-proto'] || req.protocol || '')
+    .split(',')[0]
+    .trim()
+    .toLowerCase();
+  const porHttps = req.secure || proto === 'https';
+
+  return porHttps
+    ? 'HttpOnly; Path=/; SameSite=None; Secure'
+    : 'HttpOnly; Path=/; SameSite=Lax';
+}
+
+function crearSesion(req, res, usuario) {
   const token = crypto.randomUUID();
   sesiones.set(token, {
     usuarioId: usuario.id,
@@ -314,7 +334,7 @@ function crearSesion(res, usuario) {
   });
   res.setHeader(
     'Set-Cookie',
-    `${COOKIE_NAME}=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${DURACION_SESION_MS / 1000}`
+    `${COOKIE_NAME}=${token}; ${atributosCookie(req)}; Max-Age=${DURACION_SESION_MS / 1000}`
   );
 }
 
@@ -434,14 +454,14 @@ api.post('/auth/login', (req, res) => {
     throw new ErrorHTTP(401, 'CREDENCIALES_INVALIDAS', 'Usuario o contraseña incorrectos.');
   }
 
-  crearSesion(res, encontrado);
+  crearSesion(req, res, encontrado);
   res.json({ usuario: usuarioPublico(encontrado, true) });
 });
 
 api.post('/auth/logout', autenticar, (req, res) => {
   const token = tokenDePeticion(req);
   if (token) sesiones.delete(token);
-  res.setHeader('Set-Cookie', `${COOKIE_NAME}=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0`);
+  res.setHeader('Set-Cookie', `${COOKIE_NAME}=; ${atributosCookie(req)}; Max-Age=0`);
   res.status(204).end();
 });
 
@@ -1209,10 +1229,14 @@ app.use((error, req, res, next) => {
 
 if (require.main === module) {
   app.listen(PORT, () => {
+    // En Render la URL pública llega por variable de entorno; en local se usa
+    // localhost. Es solo informativo, no afecta el funcionamiento.
+    const urlPublica = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+
     console.log('');
     console.log('  BiblioTech backend en marcha');
-    console.log(`  Frontend: http://localhost:${PORT}`);
-    console.log(`  API:      http://localhost:${PORT}/api`);
+    console.log(`  Frontend: ${urlPublica}`);
+    console.log(`  API:      ${urlPublica}/api`);
     console.log('  Datos:    en memoria (se reinician al detener el servidor)');
     console.log('  Ctrl+C para detener el servidor');
     console.log('');
