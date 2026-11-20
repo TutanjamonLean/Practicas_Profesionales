@@ -16,5 +16,5 @@
  *     API_URL: 'https://<nombre-del-servicio>.onrender.com'
  */
 window.BIBLIO_CONFIG = {
-  API_URL: ''
+  API_URL: 'https://proyecto-bibliotech.onrender.com'
 };
