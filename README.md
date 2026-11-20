@@ -1,13 +1,28 @@
 # BiblioTech
 
-Sistema de gestión de biblioteca para la Biblioteca Provincial "Manuel Belgrano". Implementación del **Hito 3** de la materia Prácticas Profesionalizantes I: frontend y backend separados, API REST con Node.js + Express y reglas de negocio en el servidor, con datos almacenados en memoria.
+Sistema de gestión de biblioteca para la Biblioteca Provincial "Manuel Belgrano". Implementación del **Hito 3** de la materia Prácticas Profesionalizantes I, publicada como **entrega final** en Render: frontend y backend separados, API REST con Node.js + Express y reglas de negocio en el servidor, con datos almacenados en memoria.
 
 ### Alcance de esta entrega
 
-Esta versión corresponde al **Hito 3**. El enunciado original del caso de estudio
-planteaba persistencia en archivos JSON; el Hito 3 la reemplaza por **datos en
-memoria**, por lo que la aplicación no escribe en disco y, al reiniciar el
-servidor, vuelve a los datos iniciales de `backend/data/semilla.json`.
+Esta versión corresponde a la **entrega final**. El frontend y el backend están
+publicados en Render como dos servicios (Static Site + Web Service). El
+enunciado original del caso de estudio planteaba persistencia en archivos JSON;
+la implementación actual usa **datos en memoria**, por lo que la aplicación no
+escribe en disco y, al reiniciar el servidor, vuelve a los datos iniciales de
+`backend/data/semilla.json`.
+
+## Enlaces públicos (Render)
+
+| Servicio | URL |
+|----------|-----|
+| Frontend (Static Site) | <https://proyecto-bibliotech-frontend.onrender.com> |
+| Backend / API (Web Service) | <https://proyecto-bibliotech.onrender.com> |
+| Estado de la API | <https://proyecto-bibliotech.onrender.com/api/health> |
+
+El frontend publicado consume la API del backend mediante `fetch` con
+credenciales (`frontend/js/config.js` centraliza la URL). En el plan gratuito de
+Render los servicios se suspenden tras unos minutos sin tráfico, por lo que la
+primera petición puede demorar hasta un minuto en responder.
 
 ## Nombre del caso de estudio
 BiblioTech
@@ -56,6 +71,9 @@ Reglas de negocio implementadas en el servidor:
 | Sin credenciales ni lógica sensible en el frontend | el login solo envía usuario y clave; las reglas y los datos viven en el backend |
 | Backend valida aunque el frontend no lo haga | middleware de sesión/rol y validaciones del servidor (cubiertas por tests) |
 | Datos temporales que se pierden al reiniciar | sin persistencia: al reiniciar se vuelve a cargar la semilla |
+| Documentación de los endpoints de la API | §7 (34 rutas verificadas contra `backend/index.js`) |
+| Despliegue y publicación | §5 "Despliegue en Render": Static Site + Web Service |
+| Documentación de entregas anteriores | carpeta `documentacion/` (relevamiento, caso de estudio, notas y diagramas) |
 
 ---
 
@@ -690,71 +708,124 @@ Director -> [Login] -> Tablero -> GET /api/dashboard
 ## 5. ESTRUCTURA DEL PROYECTO
 
 ```
-backend/
-|-- index.js              (servidor Express: API REST, sesiones, reglas y guardas)
-|-- package.json
-|-- package-lock.json
-|-- data/
-|   `-- semilla.json      (datos iniciales; se copian a memoria al arrancar)
-`-- test/
-    |-- api.test.js       (pruebas de la API)
-    `-- patch.test.js     (pruebas de actualizaciones PATCH)
-frontend/
-|-- index.html            (página principal - landing)
-|-- css/
-|   |-- styles.css        (estilos base, responsive e impresión)
-|   `-- biblio-admin.css  (tema de alto contraste para administración)
-|-- js/
-|   |-- config.js         (URL del backend; vacía = mismo origen)
-|   `-- scripts.js        (cliente de API, sesión, navbar y utilidades)
-|-- pages/
-|   |-- login.html
-|   |-- catalogo.html
-|   |-- libro.html
-|   |-- reserva.html
-|   |-- confirmacion.html
-|   |-- historial.html
-|   |-- panel-bibliotecario.html
-|   |-- reportes.html
-|   `-- tablero-director.html
-`-- assets/
-    `-- img/
-        `-- logo-bibliotech.svg
-documentacion/
-|-- relevamiento.pdf      (relevamiento completo del sistema)
-|-- diagramas/
-|   `-- diagramas.md      (arquitectura, modelo de datos y flujos en Mermaid)
-`-- anotaciones.md        (decisiones y pendientes)
-README.md                 (este documento)
-.gitignore
-.env.example              (variables de entorno de referencia; copiar a .env)
+Bibliotech web/
+|-- README.md                 (este documento)
+|-- package.json              (scripts que delegan en backend/)
+|-- .env.example              (variables de entorno de referencia; copiar a .env)
+|-- .gitignore
+|-- backend/
+|   |-- index.js              (servidor Express: API REST, sesiones, reglas y guardas)
+|   |-- package.json
+|   |-- package-lock.json
+|   |-- data/
+|   |   `-- semilla.json      (datos iniciales; se copian a memoria al arrancar)
+|   `-- test/
+|       |-- api.test.js       (pruebas de la API)
+|       `-- patch.test.js     (pruebas de actualizaciones PATCH)
+|-- frontend/
+|   |-- index.html            (página principal - landing)
+|   |-- css/
+|   |   |-- styles.css        (estilos base, responsive e impresión)
+|   |   `-- biblio-admin.css  (tema de alto contraste para administración)
+|   |-- js/
+|   |   |-- config.js         (URL del backend; vacía = mismo origen)
+|   |   `-- scripts.js        (cliente de API, sesión, navbar y utilidades)
+|   |-- pages/
+|   |   |-- login.html
+|   |   |-- catalogo.html
+|   |   |-- libro.html
+|   |   |-- reserva.html
+|   |   |-- confirmacion.html
+|   |   |-- historial.html
+|   |   |-- panel-bibliotecario.html
+|   |   |-- reportes.html
+|   |   `-- tablero-director.html
+|   `-- assets/
+|       `-- img/
+|           `-- logo-bibliotech.svg
+`-- documentacion/
+    |-- relevamiento.pdf      (relevamiento completo del sistema)
+    |-- Caso de estudio 2.txt (enunciado del caso de estudio de la cátedra)
+    |-- anotaciones.md        (decisiones y pendientes del equipo)
+    `-- diagramas/
+        `-- diagramas.md      (arquitectura, modelo de datos y flujos en Mermaid)
 ```
 
 Los datos del sistema se guardan en **memoria** (arrays y objetos). No hay base
 de datos ni escritura en disco: al reiniciar el servidor se vuelve a
 `backend/data/semilla.json`.
 
-### Cómo levantar el proyecto
+### Requisitos previos
 
-Requisitos: Node.js 20.10 o superior (las pruebas usan `--test-concurrency`).
+- **Node.js 20.10 o superior** (`node -v`): las pruebas usan
+  `--test-concurrency`, disponible desde esa versión.
+- **npm** (se instala junto con Node.js).
+- **Git** para clonar el repositorio.
+- No hace falta base de datos ni servidor web aparte: los datos viven en memoria
+  y el backend sirve el frontend.
+- Opcional: VS Code con la extensión Live Server para trabajar el frontend con
+  recarga automática.
 
-**Opción A (recomendada): un solo proceso**
+### Instalación de dependencias
 
-El backend también sirve el frontend estático.
+El backend tiene una única dependencia (`express`). Desde la raíz del
+repositorio:
+
+```bash
+npm run install:backend
+```
+
+Equivale a:
 
 ```bash
 cd backend
-npm install
-npm start
+npm install        # o npm ci para respetar package-lock.json
 ```
 
-Luego abrir <http://localhost:8080>. Para cambiar el puerto:
-`PORT=3000 npm start` (PowerShell: `$env:PORT=3000; npm start`).
+El frontend no tiene dependencias ni paso de build: son archivos HTML, CSS y
+JavaScript que el navegador carga directamente.
 
-Desde la raíz del repositorio también se puede ejecutar `npm start`,
-`npm run dev` o `npm test`; esos scripts delegan en `backend/`.
+### Ejecución local del backend
 
-**Configuración opcional con `.env`**
+Desde `backend/`:
+
+```bash
+npm start          # node index.js
+npm run dev        # node --watch index.js (se reinicia al guardar)
+```
+
+El servidor queda disponible en <http://localhost:8080> (o en el puerto que
+indique `process.env.PORT`). Desde la raíz del repositorio también funcionan
+`npm start`, `npm run dev` y `npm test`, que delegan en `backend/`.
+
+### Ejecución local del frontend
+
+**Opción 1 (recomendada): un solo proceso.** Con el backend en marcha, abrir
+<http://localhost:8080>: `express.static` sirve `frontend/` y la API responde
+bajo `/api`. No hay que configurar nada.
+
+**Opción 2: servidor estático aparte.** Servir la carpeta `frontend/` con
+cualquier servidor estático (por ejemplo, Live Server de VS Code en
+<http://localhost:5500>). El cliente detecta que está en otro puerto y apunta la
+API a `http://localhost:8080/api`.
+
+La URL del backend se centraliza en `frontend/js/config.js`:
+
+```js
+window.BIBLIO_CONFIG = {
+  API_URL: '' // vacío = mismo origen; con URL = backend remoto
+};
+```
+
+- **Vacío**: se usa el mismo origen (`/api`), como cuando el backend sirve el
+  frontend.
+- **Con URL**: se usa ese backend. Se puede escribir con o sin `/api`; el
+  cliente la normaliza (`https://host` → `https://host/api`). Es lo que usa la
+  publicación actual en Render.
+- Se mantiene `window.BIBLIO_API_URL` como alternativa por compatibilidad con
+  configuraciones anteriores.
+
+### Configuración opcional con `.env`
 
 Copiar `.env.example` a `.env` **en la raíz del repositorio** y ajustar `PORT` o
 `BIBLIO_ORIGENES`. Luego levantar con:
@@ -766,21 +837,7 @@ npm run start:env
 
 El archivo `.env` no se versiona. `npm start` no lee `.env`: para eso está
 `npm run start:env` (requiere Node.js 20.6 o superior). También se pueden
-definir las variables directamente en la terminal, como se muestra más abajo.
-
-**Opción B: frontend y backend como proyectos separados**
-
-1. Levantar el backend igual que en la opción A.
-2. Servir la carpeta `frontend/` con cualquier servidor estático (por ejemplo, la
-   extensión Live Server de VS Code en `http://localhost:5500`).
-
-El cliente detecta automáticamente que está en otro puerto y apunta la API a
-`http://localhost:8080/api`. Para usar otro host o puerto, configurar `API_URL`
-en `frontend/js/config.js` (recomendado) o definir
-`window.BIBLIO_API_URL = 'http://mi-servidor:8080/api'` antes de cargar
-`frontend/js/scripts.js`. El backend habilita CORS con credenciales para que la
-cookie de sesión funcione entre orígenes distintos. Por defecto acepta cualquier
-origen; para restringirlo, definir `BIBLIO_ORIGENES`:
+definir las variables directamente en la terminal:
 
 ```bash
 BIBLIO_ORIGENES=http://localhost:5500 npm start
@@ -790,67 +847,77 @@ En PowerShell: `$env:BIBLIO_ORIGENES='http://localhost:5500'; npm start`.
 
 ### Despliegue en Render
 
-El proyecto no necesita paso de build: el backend es Node.js + Express y el
-frontend es HTML/CSS/JS estático servido por `express.static`.
+El proyecto está publicado en Render con **dos servicios**:
 
-**Opción A (recomendada): un único Web Service**
+| Servicio | Tipo | URL |
+|----------|------|-----|
+| Frontend | Static Site | <https://proyecto-bibliotech-frontend.onrender.com> |
+| Backend / API | Web Service (Node.js) | <https://proyecto-bibliotech.onrender.com> |
+| Estado de la API | — | <https://proyecto-bibliotech.onrender.com/api/health> |
 
-1. Render → **New +** → **Web Service** y elegir este repositorio.
-2. Configurar:
-   - **Root Directory**: `backend`
-   - **Build Command**: `npm ci` (o `npm install`)
-   - **Start Command**: `npm start`
-   - **Health Check Path**: `/api/health`
-   - **Instance Type**: Free (o el que corresponda)
-3. No definir `PORT`: Render la inyecta y el servidor ya la lee
-   (`Number(process.env.PORT) || 8080`).
-4. Opcional: `NODE_VERSION=22` (el proyecto requiere Node.js 20.10 o superior).
-5. Dejar `frontend/js/config.js` con `API_URL: ''` (mismo origen).
-6. La URL del servicio sirve el frontend y la API (`/api`). En este caso no hay
-   que configurar CORS: frontend y API comparten origen.
+El backend también sirve el frontend en su propia URL
+(`https://proyecto-bibliotech.onrender.com/`), aunque la publicación oficial del
+frontend es el Static Site.
 
-**Opción B: frontend como Static Site aparte**
+**Configuración del Web Service (backend)**
 
-1. Crear el Web Service del backend como en la Opción A.
-2. Render → **New +** → **Static Site**, con:
-   - **Root Directory**: `frontend`
-   - **Build Command**: vacío (no hay build)
-   - **Publish Directory**: `.`
-3. En `frontend/js/config.js`, pegar la URL real del backend en `API_URL`
-   (con o sin `/api`; el cliente la normaliza):
+- **Root Directory**: `backend`
+- **Build Command**: `npm ci` (o `npm install`)
+- **Start Command**: `npm start`
+- **Health Check Path**: `/api/health`
+- **Variable de entorno `BIBLIO_ORIGENES`**: URL del frontend publicado
+  (`https://proyecto-bibliotech-frontend.onrender.com`), sin barra final.
+- **No definir `PORT`**: Render la inyecta y el servidor ya la lee
+  (`Number(process.env.PORT) || 8080`).
+- Opcional: `NODE_VERSION=22` (el proyecto requiere Node.js 20.10 o superior).
 
-   ```js
-   window.BIBLIO_CONFIG = {
-     API_URL: 'https://<nombre-del-backend>.onrender.com'
-   };
-   ```
+**Configuración del Static Site (frontend)**
 
-   Reemplazar `<nombre-del-backend>` por el dominio que muestra Render. El
-   archivo se versiona, así que después hay que hacer commit y push.
-4. En el **Web Service** (backend) agregar la variable de entorno
-   `BIBLIO_ORIGENES=https://<nombre-del-frontend>.onrender.com`, con el dominio
-   real del Static Site y sin barra final.
-5. La cookie de sesión se emite como `SameSite=None; Secure` cuando la petición
-   llega por HTTPS, para que viaje entre dominios distintos.
+- **Root Directory**: `frontend`
+- **Build Command**: vacío (no hay build)
+- **Publish Directory**: `.`
+- La URL del backend se configura en `frontend/js/config.js`; en este
+  repositorio ya apunta a `https://proyecto-bibliotech.onrender.com`:
 
-Advertencias de la Opción B: Safari/iOS bloquea cookies de terceros (el login
-puede no persistir); en el Static Site no se ejecutan las guardas de servidor de
-`/pages/*.html` (la protección sigue en `requerirSesion()` del cliente y en la
-API); y el plan free de Render suspende el backend tras 15 minutos sin tráfico,
-por lo que la primera petición puede tardar.
+  ```js
+  window.BIBLIO_CONFIG = {
+    API_URL: 'https://proyecto-bibliotech.onrender.com'
+  };
+  ```
 
-En ambas opciones los datos son en memoria: cada reinicio o deploy vuelve a
-`backend/data/semilla.json`.
+  Ese archivo se versiona: cada cambio requiere commit y push para que Render lo
+  vuelva a publicar.
+- La cookie de sesión se emite como `SameSite=None; Secure` cuando la petición
+  llega por HTTPS, para que viaje entre dominios distintos.
+
+**Alternativa: un único Web Service**
+
+También es posible publicar solo el Web Service y usar su URL como frontend y
+API (el backend sirve `frontend/`). En ese caso hay que dejar `API_URL` vacía y
+no hace falta configurar CORS, porque frontend y API comparten origen.
+
+**Advertencias del despliegue actual**
+
+- Safari/iOS bloquea cookies de terceros, por lo que el login puede no persistir
+  en el Static Site.
+- En el Static Site no se ejecutan las guardas de servidor de `/pages/*.html`
+  (la protección se mantiene en `requerirSesion()` del cliente y en cada
+  endpoint de la API).
+- El plan free suspende el backend tras 15 minutos sin tráfico: la primera
+  petición puede tardar hasta un minuto.
+- Los datos son en memoria: cada reinicio o deploy vuelve a
+  `backend/data/semilla.json`.
 
 **Verificación después del deploy**
 
-1. `https://<backend>.onrender.com/api/health` debe responder
+1. <https://proyecto-bibliotech.onrender.com/api/health> debe responder
    `{"estado":"ok", ...}`.
-2. Abrir el frontend e iniciar sesión. En DevTools → Network,
-   `POST /api/auth/login` debe responder 200 y, en la Opción B,
-   `Access-Control-Allow-Origin` debe coincidir con el dominio del frontend.
+2. Abrir <https://proyecto-bibliotech-frontend.onrender.com> e iniciar sesión.
+   En DevTools → Network, `POST /api/auth/login` debe responder 200 y
+   `Access-Control-Allow-Origin` debe ser
+   `https://proyecto-bibliotech-frontend.onrender.com`.
 3. En DevTools → Application → Cookies, `biblio_sesion` debe estar presente con
-   `HttpOnly` y `Secure`.
+   `HttpOnly`, `Secure` y `SameSite=None`.
 4. Recargar una página protegida: `GET /api/auth/me` debe responder 200 (la
    sesión persiste).
 
@@ -893,75 +960,104 @@ automáticamente a los datos iniciales de `backend/data/semilla.json`.
 
 - **Backend Node.js + Express 5** (`backend/index.js`)
   - API REST con rutas por recurso y respuestas JSON
-  - Sesiones en memoria con cookie `HttpOnly`, `SameSite=Lax`
+  - Sesiones en memoria con cookie `HttpOnly`; `SameSite=Lax` en HTTP local y
+    `SameSite=None; Secure` cuando la petición llega por HTTPS (Render)
   - Middlewares de autenticación y autorización por rol
   - Validación de reglas de negocio y errores con códigos propios
   - Datos en memoria (arrays y objetos) reiniciados desde la semilla
-  - CORS con credenciales para ejecutar el frontend por separado
+  - CORS con credenciales y lista blanca opcional (`BIBLIO_ORIGENES`)
   - Guardas de página del lado del servidor
   - Registro de tiempos de respuesta de la API
-- **Frontend sin frameworks**
+- **Frontend sin frameworks ni paso de build**
   - HTML5 semántico: `<header>`, `<nav>`, `<main>`, `<section>`, `<table>` con `<caption>`/`<thead>`/`<tbody>`, `aria-live`, `role="alert"`
   - CSS externo con Flexbox, utilidades (`.boton`, `.etiqueta`, `.aviso`), responsive en 1024/768/480 px y estilos de impresión
   - `frontend/js/scripts.js`: cliente `fetch` centralizado, control de sesión, navbar dinámica, avisos y utilidades de fecha
+  - `frontend/js/config.js`: URL del backend centralizada (vacía = mismo origen)
   - Sin `localStorage`: todo el estado se consulta y se modifica a través de la API
   - Indicador global de carga y exportación del reporte de vencidos a CSV
 - **Pruebas**: `node:test` + `node:assert/strict` sobre los datos en memoria
+- **Despliegue**: Render, con un Static Site para el frontend y un Web Service
+  para el backend. El servidor usa `process.env.PORT`, expone el health check
+  `/api/health` y sirve el frontend estático cuando se accede por su propia URL.
 
 ---
 
-## 7. API REST
+## 7. ENDPOINTS DE LA API
 
-Base: `http://localhost:8080/api`. Todas las rutas requieren sesión salvo
-`GET /health`, `GET /config`, `POST /auth/login` y `GET /libros/populares`.
+La API se monta bajo el prefijo `/api` (`app.use('/api', api)` en
+`backend/index.js`). Bases:
 
-| Método | Ruta | Rol | Descripción |
-|--------|------|-----|-------------|
-| GET | `/health` | público | Estado del servidor y versión |
-| GET | `/config` | público | Configuración (días de préstamo, máximo, nombre) |
-| POST | `/auth/login` | público | Inicia sesión y entrega la cookie |
-| POST | `/auth/logout` | autenticado | Cierra la sesión |
-| GET | `/auth/me` | autenticado | Datos del usuario de la sesión |
-| GET | `/libros` | autenticado | Catálogo con filtros `buscar`, `genero`, `disponible` |
-| GET | `/libros/populares` | público | Los 6 libros más pedidos (préstamos + solicitudes no rechazadas) |
-| GET | `/libros/:id` | autenticado | Detalle de un libro activo |
-| POST | `/libros` | bibliotecario | Alta de libro |
-| PUT | `/libros/:id` | bibliotecario | Edita título, autor, género, año, descripción y `soloSala` |
-| DELETE | `/libros/:id` | bibliotecario | Baja lógica (`eliminado: true`), conserva el historial |
-| GET | `/libros/:id/resenias` | autenticado | Reseñas del libro con promedio y total |
-| POST | `/libros/:id/resenias` | socio | Crea o actualiza la reseña propia (puntuación 1-5 + comentario) |
-| POST | `/libros/:id/ejemplares` | bibliotecario | Agrega ejemplares |
-| POST | `/libros/:id/baja` | bibliotecario | Quita un ejemplar (baja de cantidad) |
-| POST | `/solicitudes` | socio | Crea una reserva |
-| GET | `/solicitudes` | bibliotecario | Lista solicitudes por estado, de la más reciente a la más antigua |
-| GET | `/solicitudes/mias` | socio | Reservas propias para consultar el ticket |
-| GET | `/solicitudes/:id` | socio dueño / bibliotecario | Detalle de una solicitud |
-| PATCH | `/solicitudes/:id` | bibliotecario | Cambia el estado a `aprobada` o `rechazada` |
-| POST | `/solicitudes/:id/aprobar` | bibliotecario | Alias de acción: aprueba la entrega y crea el préstamo |
-| POST | `/solicitudes/:id/rechazar` | bibliotecario | Alias de acción: rechaza y repone stock |
-| GET | `/prestamos/mios` | socio | Préstamos activos, devueltos y sanciones |
-| GET | `/prestamos` | bibliotecario | Préstamos activos |
-| GET | `/prestamos/vencidos` | bibliotecario / director | Reporte de vencidos |
-| GET | `/reportes/morosos` | bibliotecario / director | Morosos agrupados por socio y detalle de vencidos |
-| GET | `/prestamos/proximos` | bibliotecario | Devoluciones de hoy o anteriores |
-| PATCH | `/prestamos/:id` | bibliotecario | Cambia el estado a `devuelto` y repone stock |
-| POST | `/prestamos/:id/devolucion` | bibliotecario | Alias de acción: registra devolución y repone stock |
-| POST | `/notificaciones` | bibliotecario | Envía notificación a un socio |
-| GET | `/notificaciones/mias` | socio | Notificaciones del socio |
-| PATCH | `/notificaciones/:id` | socio | Marca una notificación como leída (`{ "leida": true }`) |
-| POST | `/notificaciones/:id/leida` | socio | Alias de acción: marca una notificación como leída |
-| GET | `/dashboard` | director | Indicadores, categorías y faltantes |
+- Local: `http://localhost:8080/api`
+- Pública (Render): `https://proyecto-bibliotech.onrender.com/api`
 
-Códigos de error principales: `NO_AUTENTICADO` (401), `SIN_PERMISO` (403),
-`CREDENCIALES_INVALIDAS` (401), `LIBRO_NO_ENCONTRADO` (404), `SIN_STOCK` (409),
-`CUPO_EXCEDIDO` (409), `LIBRO_SOLO_SALA` (409), `SOLICITUD_NO_PENDIENTE` (409),
-`PRESTAMO_NO_ACTIVO` (409).
+**Autenticación:** `POST /api/auth/login` devuelve la cookie de sesión
+`biblio_sesion` (`HttpOnly`; `SameSite=Lax` en HTTP local y
+`SameSite=None; Secure` cuando la petición llega por HTTPS). El frontend la
+envía con `credentials: 'include'`. Cada ruta protegida valida la sesión y,
+cuando corresponde, el rol.
+
+**Acceso:** "público" = sin sesión; "autenticado" = cualquier usuario logueado;
+el resto indica el rol requerido.
+
+| Método | Ruta completa | Acceso | Descripción |
+|--------|---------------|--------|-------------|
+| GET | `/api/health` | público | Estado del servidor, versión y uptime |
+| GET | `/api/config` | público | Configuración (días de préstamo, máximo, nombre) |
+| POST | `/api/auth/login` | público | Inicia sesión y entrega la cookie `biblio_sesion` |
+| POST | `/api/auth/logout` | autenticado | Cierra la sesión y borra la cookie |
+| GET | `/api/auth/me` | autenticado | Datos del usuario de la sesión |
+| GET | `/api/libros` | autenticado | Catálogo con filtros `buscar`, `genero`, `disponible` |
+| GET | `/api/libros/populares` | público | Los 6 libros más pedidos (préstamos + solicitudes no rechazadas) |
+| GET | `/api/libros/:id` | autenticado | Detalle de un libro activo |
+| POST | `/api/libros` | bibliotecario | Alta de libro (título, autor y género obligatorios) |
+| PUT | `/api/libros/:id` | bibliotecario | Edita título, autor, género, año, descripción y `soloSala` |
+| DELETE | `/api/libros/:id` | bibliotecario | Baja lógica (`eliminado: true`), conserva el historial |
+| GET | `/api/libros/:id/resenias` | autenticado | Reseñas del libro con promedio y total |
+| POST | `/api/libros/:id/resenias` | socio | Crea o actualiza la reseña propia (puntuación 1-5 + comentario) |
+| POST | `/api/libros/:id/ejemplares` | bibliotecario | Agrega ejemplares (`{ cantidad }`) |
+| POST | `/api/libros/:id/baja` | bibliotecario | Quita un ejemplar del inventario (baja de cantidad) |
+| POST | `/api/solicitudes` | socio | Crea una reserva (`{ libroId, fechaRetiro }`) |
+| GET | `/api/solicitudes` | bibliotecario | Solicitudes por estado (`?estado=`, por defecto `pendiente`) |
+| GET | `/api/solicitudes/mias` | socio | Reservas propias para consultar el ticket |
+| GET | `/api/solicitudes/:id` | socio dueño / bibliotecario | Detalle de una solicitud |
+| PATCH | `/api/solicitudes/:id` | bibliotecario | Cambia el estado a `aprobada` o `rechazada` |
+| POST | `/api/solicitudes/:id/aprobar` | bibliotecario | Alias de acción: aprueba la entrega y crea el préstamo |
+| POST | `/api/solicitudes/:id/rechazar` | bibliotecario | Alias de acción: rechaza y repone stock |
+| GET | `/api/prestamos/mios` | socio | Préstamos activos, devueltos y sanciones |
+| GET | `/api/prestamos` | bibliotecario | Préstamos activos |
+| GET | `/api/prestamos/vencidos` | bibliotecario / director | Reporte de préstamos vencidos |
+| GET | `/api/reportes/morosos` | bibliotecario / director | Morosos agrupados por socio y detalle de vencidos |
+| GET | `/api/prestamos/proximos` | bibliotecario | Devoluciones de hoy o anteriores |
+| PATCH | `/api/prestamos/:id` | bibliotecario | Cambia el estado a `devuelto` y repone stock (`{ estado }`) |
+| POST | `/api/prestamos/:id/devolucion` | bibliotecario | Alias de acción: registra devolución y repone stock |
+| POST | `/api/notificaciones` | bibliotecario | Envía una notificación a un socio (`{ nroSocio, libroId?, motivo? }`) |
+| GET | `/api/notificaciones/mias` | socio | Notificaciones del socio |
+| PATCH | `/api/notificaciones/:id` | socio | Marca una notificación como leída (`{ leida: true }`) |
+| POST | `/api/notificaciones/:id/leida` | socio | Alias de acción: marca una notificación como leída |
+| GET | `/api/dashboard` | director | Indicadores, categorías más leídas y títulos faltantes |
+
+Cualquier otra ruta bajo `/api` responde `404` con `RUTA_NO_ENCONTRADA`.
+
+Códigos de error principales:
+
+- **400:** `DATOS_INCOMPLETOS`, `DATOS_INVALIDOS`, `ESTADO_INVALIDO`,
+  `FECHA_INVALIDA`, `PUNTUACION_INVALIDA`, `COMENTARIO_VACIO`,
+  `COMENTARIO_LARGO`, `JSON_INVALIDO`
+- **401:** `NO_AUTENTICADO`, `CREDENCIALES_INVALIDAS`
+- **403:** `SIN_PERMISO`
+- **404:** `LIBRO_NO_ENCONTRADO`, `SOLICITUD_NO_ENCONTRADA`,
+  `PRESTAMO_NO_ENCONTRADO`, `SOCIO_NO_ENCONTRADO`,
+  `NOTIFICACION_NO_ENCONTRADA`, `RUTA_NO_ENCONTRADA`
+- **409:** `SIN_STOCK`, `SIN_EJEMPLARES`, `CUPO_EXCEDIDO`, `LIBRO_SOLO_SALA`,
+  `SOLICITUD_NO_PENDIENTE`, `PRESTAMO_NO_ACTIVO`
+- **500:** `ERROR_INTERNO`
 
 ---
 
 ## 8. FUNCIONAMIENTO GENERAL
 
-1. El navegador carga el frontend desde Express.
+1. El navegador carga el frontend desde el Static Site de Render (o desde
+   Express en `http://localhost:8080`, que también sirve `frontend/`).
 2. `frontend/js/scripts.js` consulta `GET /api/auth/me` para conocer la sesión.
 3. El login llama a `POST /api/auth/login`; el servidor responde con la cookie
    `biblio_sesion` y el frontend redirige según el rol.
@@ -975,5 +1071,6 @@ Códigos de error principales: `NO_AUTENTICADO` (401), `SIN_PERMISO` (403),
 > académico. Para producción corresponde hashear las claves, usar sesiones
 > persistidas o JWT, agregar HTTPS y limitar intentos de login.
 
-Para más detalle ver `documentacion/anotaciones.md` y
+Para más detalle ver `documentacion/relevamiento.pdf`,
+`documentacion/Caso de estudio 2.txt`, `documentacion/anotaciones.md` y
 `documentacion/diagramas/diagramas.md`.
